@@ -11,7 +11,10 @@
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.adaptx.unified5k"
+      "bundleIdentifier": "com.adaptx.unified5k",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -48,7 +51,8 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
@@ -56,8 +60,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "07392021-0dbd-462b-8b25-518d398b9f51"
+        "projectId": "25e0d040-7b1f-4900-9b8b-1c062faec0c7"
       }
-    }
+    },
+    "owner": "sparksub"
   }
 }
