@@ -1,10 +1,11 @@
 import { useSignIn } from '@clerk/clerk-expo';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignInScreen() {
     const { signIn, setActive, isLoaded } = useSignIn();
@@ -27,7 +28,7 @@ export default function SignInScreen() {
 
             if (signInAttempt.status === 'complete') {
                 await setActive({ session: signInAttempt.createdSessionId });
-                router.replace('/(tabs)');
+                router.replace("/"); 
             } else {
                 Alert.alert('Error', 'Sign in incomplete. Please try again.');
                 console.error(JSON.stringify(signInAttempt, null, 2));
@@ -42,35 +43,53 @@ export default function SignInScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Header />
+        <SafeAreaView className="bg-white flex-1" edges={['top']}>
+            <ScrollView>
+                <View style={{ position: 'relative' }}>
+                    <Header />
+                    <TouchableOpacity 
+                        style={{
+                            position: 'absolute',
+                            right: 16,
+                            top: 8,
+                            padding: 8,
+                            zIndex: 10,
+                        }}
+                        onPress={() => router.back()}
+                    >
+                        <Ionicons name="close" size={32} color="#000" />
+                    </TouchableOpacity>
+                </View>
 
-                <Text variant="displayMedium" style={styles.title}>
-                    Sign In
+                <Text
+                    variant="displayMedium"
+                    style={{
+                        textAlign: "center",
+                        marginBottom: 16,
+                        fontWeight: "bold",
+                    }}
+                >
+                    Login
                 </Text>
 
-                <View style={styles.formContainer}>
-                    <View style={styles.form}>
+                <View className="rounded-2xl border-2 border-[#1BA8D8] px-2 py-16 mx-4">
+                    <View style={{ gap: 32 }}>
                         <TextInput
-                            label="Email"
+                            placeholder="Email"
+                            outlineColor="#1BA8D8"
+                            mode="outlined"
                             value={emailAddress}
                             onChangeText={setEmailAddress}
                             autoCapitalize="none"
                             keyboardType="email-address"
-                            mode="outlined"
-                            outlineColor="#1BA8D8"
-                            style={styles.input}
                         />
-
                         <TextInput
-                            label="Password"
+                            placeholder="Password"
+                            outlineColor="#1BA8D8"
+                            mode="outlined"
+                            secureTextEntry={hidePassword}
                             value={password}
                             onChangeText={setPassword}
-                            secureTextEntry={hidePassword}
-                            mode="outlined"
-                            outlineColor="#1BA8D8"
-                            style={styles.input}
                             right={
                                 <TextInput.Icon
                                     icon={hidePassword ? "eye" : "eye-off"}
@@ -78,92 +97,75 @@ export default function SignInScreen() {
                                 />
                             }
                         />
+                    </View>
 
-                        <Link href="/" style={styles.forgotPassword}>
-                            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                        </Link>
+                    <Link
+                        style={{
+                            alignSelf: "flex-end",
+                            color: "#0023DD",
+                            marginTop: 8,
+                            fontWeight: "400",
+                        }}
+                        href="/"
+                    >
+                        Forgot Password?
+                    </Link>
 
+                    <View style={{ marginTop: 24, gap: 32 }}>
                         <Button
                             mode="contained"
+                            buttonColor="#1BA8D8"
+                            style={{
+                                borderRadius: 8,
+                            }}
                             onPress={onSignInPress}
                             loading={loading}
                             disabled={loading}
-                            buttonColor="#1BA8D8"
-                            style={styles.button}
                         >
-                            <Text variant="headlineSmall" style={{ color: '#fff' }}>
-                                Sign In
+                            <Text
+                                variant="headlineSmall"
+                                style={{
+                                    color: "#ffffff",
+                                    fontWeight: "700",
+                                }}
+                            >
+                                Login
                             </Text>
                         </Button>
 
+                        <Link href="/(auth)/sign-up" asChild>
+                            <TouchableOpacity>
+                                <Button
+                                    mode="outlined"
+                                    textColor="#000000"
+                                    style={{
+                                        borderRadius: 8
+                                    }}
+                                    disabled={loading}
+                                >
+                                    <Text variant="headlineSmall" style={{ fontWeight: "700" }}>
+                                        Create new account
+                                    </Text>
+                                </Button>
+                            </TouchableOpacity>
+                        </Link>
+
                         <Button
                             mode="outlined"
-                            onPress={() => router.push('/(tabs)')}
-                            style={styles.guestButton}
+                            textColor="#000000"
+                            style={{
+                                borderRadius: 8
+                            }}
+                            onPress={() => router.replace("/")}
+                            disabled={loading}
                         >
-                            <Text variant="headlineSmall">Continue as Guest</Text>
+                            <Text variant="headlineSmall" style={{ fontWeight: "700" }}>
+                                Continue as guest
+                            </Text>
                         </Button>
-
-                        <View style={styles.footer}>
-                            <Text>Don't have an account? </Text>
-                            <Link href="/(auth)/sign-up" asChild>
-                                <Text style={styles.link}>Sign up</Text>
-                            </Link>
-                        </View>
                     </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    scrollContent: {
-        flexGrow: 1,
-    },
-    title: {
-        textAlign: 'center',
-        marginBottom: 24,
-        marginTop: 16,
-    },
-    formContainer: {
-        marginHorizontal: 16,
-        borderWidth: 2,
-        borderColor: '#1BA8D8',
-        borderRadius: 16,
-        padding: 16,
-    },
-    form: {
-        gap: 16,
-    },
-    input: {
-        backgroundColor: '#fff',
-    },
-    forgotPassword: {
-        alignSelf: 'flex-end',
-        marginTop: -8,
-    },
-    forgotPasswordText: {
-        color: '#0023DD',
-    },
-    button: {
-        marginTop: 8,
-        borderRadius: 8,
-    },
-    guestButton: {
-        borderRadius: 8,
-    },
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 8,
-    },
-    link: {
-        color: '#1BA8D8',
-        fontWeight: '600',
-    },
-});

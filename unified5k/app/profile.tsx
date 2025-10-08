@@ -1,112 +1,254 @@
 // Profile Page
 
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import CollapsibleSection from '../components/profile/CollapsibleSection';
 import Header from '../components/Header';
 import * as ImagePicker from 'expo-image-picker';
+import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useRouter, Link } from 'expo-router';
+import { Button } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function ProfileScreen() {
+    const { isSignedIn, signOut } = useAuth();
+    const { user } = useUser();
+    const router = useRouter();
 
     const [selectedTab, setSelectedTab] = useState<'Participant' | 'Volunteer' | 'Organization'>('Organization');
     const [imageUri, setImageUri] = useState<string | null>(null);
 
-     const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      alert('Permission to access media library is required!');
-      return;
-    }
+    const pickImage = async () => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissionResult.granted) {
+            alert('Permission to access media library is required!');
+            return;
+        }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
+        if (!result.canceled) {
+            setImageUri(result.assets[0].uri);
+        }
+    };
 
-
-
-    return (
-        <View style={styles.container}>
-            {/* Top Bar with Logo */}
-            <Header />
-
-            {/* Profile Row (image + name/email/badge) */}
-            <View style={styles.profileRow}>
-                <View style={styles.profileImageWrapper}>
-                   <TouchableOpacity onPress={pickImage}>
-                        <View style={styles.profileImageWrapper}>
-                            <Image
-                                source={
-                                    imageUri
-                                        ? { uri: imageUri }
-                                        : require('../assets/images/profile-placeholder.jpg')
-                                }
-                                style={styles.profileImage}
-                            />
-                            <View style={styles.editIcon}>
-                                <Text style={styles.editText}>✎</Text>
-                            </View>
+    // If user is not signed in, show login prompt
+    if (!isSignedIn) {
+        return (
+            <SafeAreaView style={styles.container} edges={['top']}>
+                <ScrollView 
+                    contentContainerStyle={styles.loginScrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.headerWrapper}>
+                        <Header />
+                    </View>
+                    
+                    <View style={styles.loginPromptContainer}>
+                        <Image
+                            source={require('../assets/images/profile-placeholder.jpg')}
+                            style={styles.placeholderImage}
+                        />
+                        <Text style={styles.loginPromptTitle}>Sign in to view your profile</Text>
+                        <Text style={styles.loginPromptSubtitle}>
+                            Access your events, volunteer history, and organization details
+                        </Text>
+                        
+                        <Link href="/(auth)/sign-in" asChild>
+                            <TouchableOpacity style={styles.loginButtonWrapper}>
+                                <View style={styles.loginButtonContainer}>
+                                    <Text style={styles.loginButtonText}>Sign In</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </Link>
+                        
+                        <View style={styles.signupPrompt}>
+                            <Text style={styles.signupText}>Don't have an account? </Text>
+                            <Link href="/(auth)/sign-up" asChild>
+                                <TouchableOpacity>
+                                    <Text style={styles.signupLink}>Sign Up</Text>
+                                </TouchableOpacity>
+                            </Link>
                         </View>
-                    </TouchableOpacity>
-                </View>
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        );
+    }
 
-                <View style={styles.profileInfo}>
-                    <Text style={styles.name}>John Doe</Text>
-                    <Text style={styles.email}>john@gmail.com</Text>
-                    <View style={styles.participantBadge}>
-                        <Text style={styles.badgeText}>Participant</Text>
+    // User is signed in - show profile
+    return (
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                {/* Top Bar with Logo */}
+                <Header />
+
+                {/* Profile Row (image + name/email/badge) */}
+                <View style={styles.profileRow}>
+                    <View style={styles.profileImageWrapper}>
+                        <TouchableOpacity onPress={pickImage}>
+                            <View style={styles.profileImageWrapper}>
+                                <Image
+                                    source={
+                                        imageUri
+                                            ? { uri: imageUri }
+                                            : user?.imageUrl
+                                            ? { uri: user.imageUrl }
+                                            : require('../assets/images/profile-placeholder.jpg')
+                                    }
+                                    style={styles.profileImage}
+                                />
+                                <View style={styles.editIcon}>
+                                    <Text style={styles.editText}>✎</Text>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.profileInfo}>
+                        <Text style={styles.name}>
+                            {user?.firstName && user?.lastName 
+                                ? `${user.firstName} ${user.lastName}`
+                                : user?.username || 'User'}
+                        </Text>
+                        <Text style={styles.email}>
+                            {user?.primaryEmailAddress?.emailAddress || 'No email'}
+                        </Text>
+                        <View style={styles.participantBadge}>
+                            <Text style={styles.badgeText}>Participant</Text>
+                        </View>
                     </View>
                 </View>
-            </View>
 
-            {/* Tabs */}
-            <View style={styles.tabsRow}>
-                {['Participant', 'Volunteer', 'Organization'].map((tab) => (
-                    <TouchableOpacity key={tab} onPress={() => setSelectedTab(tab as any)}>
-                        <Text style={[styles.tab, selectedTab === tab && styles.activeTab]}>
-                            {tab}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-            {selectedTab === 'Participant' && (
-                <View style={{ paddingTop: 20 }}>
-                    <CollapsibleSection title="Upcoming Events">
-                        {/* These are outside the box */}
-                        <Text>Race Card</Text>
-                        <Text>RaceCard</Text>
-                    </CollapsibleSection>
-
-                    <CollapsibleSection title="Past Events">
-                        <Text>Race Card</Text>
-                    </CollapsibleSection>
+                {/* Tabs */}
+                <View style={styles.tabsRow}>
+                    {['Participant', 'Volunteer', 'Organization'].map((tab) => (
+                        <TouchableOpacity key={tab} onPress={() => setSelectedTab(tab as any)}>
+                            <Text style={[styles.tab, selectedTab === tab && styles.activeTab]}>
+                                {tab}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
-            )}
 
+                {selectedTab === 'Participant' && (
+                    <View style={{ paddingTop: 20 }}>
+                        <CollapsibleSection title="Upcoming Events">
+                            <Text>Race Card</Text>
+                            <Text>RaceCard</Text>
+                        </CollapsibleSection>
 
+                        <CollapsibleSection title="Past Events">
+                            <Text>Race Card</Text>
+                        </CollapsibleSection>
+                    </View>
+                )}
 
-        </View>
+                {/* Sign Out Button */}
+                <View style={styles.signOutContainer}>
+                    <Button
+                        mode="outlined"
+                        onPress={() => signOut()}
+                        style={styles.signOutButton}
+                        textColor="#DC2626"
+                    >
+                        Sign Out
+                    </Button>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 40 },
-    topBar: { alignItems: 'flex-start', marginBottom: 16 },
-    logo: { width: 100, height: 40, resizeMode: 'contain' },
+    container: { 
+        flex: 1, 
+        backgroundColor: '#fff',
+    },
+    scrollContent: {
+        paddingHorizontal: 16,
+        paddingBottom: 40,
+    },
+    
+    // Login Screen Styles
+    loginScrollContent: {
+        minHeight: SCREEN_HEIGHT * 0.9, // Use 90% of screen height
+        justifyContent: 'space-between',
+    },
+    headerWrapper: {
+        // Header at top
+    },
+    loginPromptContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 32,
+        paddingVertical: 40,
+    },
+    placeholderImage: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        marginBottom: 24,
+        opacity: 0.5,
+    },
+    loginPromptTitle: {
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#000',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    loginPromptSubtitle: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 32,
+        lineHeight: 22,
+    },
+    loginButtonWrapper: {
+        width: '100%',
+        maxWidth: 400, // Limit width on larger screens
+    },
+    loginButtonContainer: {
+        backgroundColor: '#1BA8D8',
+        borderRadius: 8,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loginButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    signupPrompt: {
+        flexDirection: 'row',
+        marginTop: 16,
+    },
+    signupText: {
+        fontSize: 14,
+        color: '#666',
+    },
+    signupLink: {
+        fontSize: 14,
+        color: '#1BA8D8',
+        fontWeight: '600',
+    },
 
+    // Profile Styles
     profileRow: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 20,
+        marginTop: 16,
     },
     profileImageWrapper: {
         position: 'relative',
@@ -173,4 +315,14 @@ const styles = StyleSheet.create({
         borderColor: '#00BFFF',
     },
 
+    // Sign Out Button
+    signOutContainer: {
+        marginTop: 32,
+        marginBottom: 40,
+    },
+    signOutButton: {
+        borderRadius: 8,
+        borderColor: '#DC2626',
+        borderWidth: 1,
+    },
 });
