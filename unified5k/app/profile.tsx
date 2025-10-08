@@ -86,10 +86,10 @@ export default function ProfileScreen() {
     // User is signed in - show profile
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
+            {/* Header OUTSIDE ScrollView to match login behavior */}
+            <Header />
+            
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* Top Bar with Logo */}
-                <Header />
-
                 {/* Profile Row (image + name/email/badge) */}
                 <View style={styles.profileRow}>
                     <View style={styles.profileImageWrapper}>
