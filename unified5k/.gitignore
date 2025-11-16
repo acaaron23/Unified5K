@@ -39,3 +39,11 @@ yarn-error.*
 app-example
 
 .env*
+
+# IDE
+.idea/
+
+# Root-level project files (project structure has nested setup)
+/package.json
+/package-lock.json
+/tsconfig.json
