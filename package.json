@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "@clerk/clerk-expo": "^2.16.1"
-  },
-  "devDependencies": {
-    "@types/react": "~19.1.10",
-    "typescript": "~5.9.2"
-  }
-}
