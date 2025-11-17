@@ -67,7 +67,9 @@ class OAuth2Service {
       const result = await authRequest.promptAsync(this.discovery);
 
       console.log('OAuth result type:', result.type);
-      console.log('OAuth result ALL params:', JSON.stringify(result.params, null, 2));
+      if (result.type === 'success') {
+        console.log('OAuth result ALL params:', JSON.stringify(result.params, null, 2));
+      }
 
       // Log all parameter keys to see what we're getting
       if (result.type === 'success' && result.params) {

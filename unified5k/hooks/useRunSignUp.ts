@@ -122,7 +122,7 @@ export function useRunSignUp() {
         ...prev,
         isLinked: true,
         runSignUpUserId: oauthUser.user_id,
-        runSignUpUser: oauthUser, // Store basic OAuth user info
+        runSignUpUser: null, // Will be populated when we fetch detailed user info
         isLoading: false,
       }));
 

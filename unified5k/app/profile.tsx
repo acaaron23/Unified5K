@@ -154,7 +154,7 @@ export default function ProfileScreen() {
                         </Link>
                         
                         <View style={styles.signupPrompt}>
-                            <Text style={styles.signupText}>Don't have an account? </Text>
+                            <Text style={styles.signupText}>Don&apos;t have an account? </Text>
                             <Link href="/(auth)/sign-up" asChild>
                                 <TouchableOpacity>
                                     <Text style={styles.signupLink}>Sign Up</Text>
