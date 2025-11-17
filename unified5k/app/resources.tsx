@@ -31,13 +31,57 @@ type TrainingPlan = {
 const BLOGS: Blog[] = [
   {
     id: 'b1',
-    title: 'Blog Post Title',
+    title: '5 Tips for First-Time 5K Runners',
+    date: '2025-01-15',
     imageUrl:
-      'https://images.unsplash.com/photo-1520975922203-b6b7d3f6a3f0?q=80&w=1400&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=1400&auto=format&fit=crop',
   },
   {
     id: 'b2',
-    title: 'Blog Post Title',
+    title: 'The Importance of Inclusive Running Communities',
+    date: '2025-01-10',
+    imageUrl:
+      'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 'b3',
+    title: 'Adaptive Running: Breaking Down Barriers',
+    date: '2025-01-05',
+    imageUrl:
+      'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 'b4',
+    title: 'Nutrition Guide for Race Day Success',
+    date: '2024-12-28',
+    imageUrl:
+      'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 'b5',
+    title: 'Building Mental Resilience as a Runner',
+    date: '2024-12-20',
+    imageUrl:
+      'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 'b6',
+    title: 'How to Choose the Right Running Shoes',
+    date: '2024-12-15',
+    imageUrl:
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 'b7',
+    title: 'Cross-Training Exercises for Runners',
+    date: '2024-12-10',
+    imageUrl:
+      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 'b8',
+    title: 'Running with a Disability: Success Stories',
+    date: '2024-12-05',
     imageUrl:
       'https://images.unsplash.com/photo-1520975922203-b6b7d3f6a3f0?q=80&w=1400&auto=format&fit=crop',
   },
@@ -46,17 +90,38 @@ const BLOGS: Blog[] = [
 const TRAINING_PLANS: TrainingPlan[] = [
   {
     id: 't1',
-    title: 'Training Plan Title',
-    description: 'Description of the training plan',
+    title: 'Couch to 5K - Beginner Program',
+    description: '8-week program designed for absolute beginners to complete their first 5K',
     imageUrl:
       'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1400&auto=format&fit=crop',
   },
   {
     id: 't2',
-    title: 'Advanced Running Program',
-    description: '12-week intensive training for competitive runners',
+    title: 'Advanced Marathon Training',
+    description: '16-week intensive program for experienced runners targeting sub-4 hour marathons',
     imageUrl:
       'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 't3',
+    title: 'Adaptive Running Guide',
+    description: 'Comprehensive training plan for runners with physical disabilities',
+    imageUrl:
+      'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 't4',
+    title: '10K Speed Improvement Plan',
+    description: '10-week program focused on increasing your 10K pace and endurance',
+    imageUrl:
+      'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?q=80&w=1400&auto=format&fit=crop',
+  },
+  {
+    id: 't5',
+    title: 'Half Marathon Preparation',
+    description: '12-week training schedule to prepare for your first half marathon',
+    imageUrl:
+      'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=1400&auto=format&fit=crop',
   },
 ];
 
@@ -90,13 +155,13 @@ function SegmentedResources({
           flex: 1,
           alignItems: 'center',
           paddingVertical: 12,
-          backgroundColor: active === 'training' ? '#E0F7FA' : '#fff',
+          backgroundColor: active === 'training' ? '#1BA8D8' : '#fff',
         }}
       >
-        <Text style={{ 
-          fontSize: 16, 
+        <Text style={{
+          fontSize: 16,
           fontWeight: '600',
-          color: '#000',
+          color: active === 'training' ? '#fff' : '#000',
         }}>
           Training Plans
         </Text>
@@ -107,13 +172,13 @@ function SegmentedResources({
           flex: 1,
           alignItems: 'center',
           paddingVertical: 12,
-          backgroundColor: active === 'blogs' ? '#E0F7FA' : '#fff',
+          backgroundColor: active === 'blogs' ? '#1BA8D8' : '#fff',
         }}
       >
-        <Text style={{ 
-          fontSize: 16, 
+        <Text style={{
+          fontSize: 16,
           fontWeight: '600',
-          color: '#000',
+          color: active === 'blogs' ? '#fff' : '#000',
         }}>
           Blog Posts
         </Text>
@@ -228,26 +293,36 @@ function SortChip({
 // ---------- Blog Row ----------
 function BlogRow({ item }: { item: Blog }) {
   return (
-    <View style={{ marginBottom: 32 }}>
-      <Text style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 12 }}>
-        {item.title}
-      </Text>
-      <Image 
-        source={{ uri: item.imageUrl }} 
-        style={{ 
-          width: '100%', 
-          height: 220, 
-          borderRadius: 12,
-          marginBottom: 16,
-        }} 
-        resizeMode="cover" 
+    <View style={{
+      borderRadius: 24,
+      borderWidth: 2,
+      borderColor: '#1BA8D8',
+      overflow: 'hidden',
+      backgroundColor: '#fff',
+      marginBottom: 16,
+    }}>
+      <Image
+        source={{ uri: item.imageUrl }}
+        style={{
+          width: '100%',
+          height: 220,
+        }}
+        resizeMode="cover"
       />
-      {/* Divider line */}
-      <View style={{ 
-        height: 1, 
-        backgroundColor: '#1BA8D8', 
-        opacity: 0.3,
-      }} />
+      <View style={{ padding: 16 }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>
+          {item.title}
+        </Text>
+        {item.date && (
+          <Text style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+            {new Date(item.date).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            })}
+          </Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -255,29 +330,30 @@ function BlogRow({ item }: { item: Blog }) {
 // ---------- Training Plan Row ----------
 function TrainingPlanRow({ item }: { item: TrainingPlan }) {
   return (
-    <View style={{ marginBottom: 32 }}>
-      <Text style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 8 }}>
-        {item.title}
-      </Text>
-      <Text style={{ fontSize: 16, color: '#666', marginBottom: 12 }}>
-        {item.description}
-      </Text>
-      <Image 
-        source={{ uri: item.imageUrl }} 
-        style={{ 
-          width: '100%', 
-          height: 220, 
-          borderRadius: 12,
-          marginBottom: 16,
-        }} 
-        resizeMode="cover" 
+    <View style={{
+      borderRadius: 24,
+      borderWidth: 2,
+      borderColor: '#1BA8D8',
+      overflow: 'hidden',
+      backgroundColor: '#fff',
+      marginBottom: 16,
+    }}>
+      <Image
+        source={{ uri: item.imageUrl }}
+        style={{
+          width: '100%',
+          height: 220,
+        }}
+        resizeMode="cover"
       />
-      {/* Divider line */}
-      <View style={{ 
-        height: 1, 
-        backgroundColor: '#1BA8D8', 
-        opacity: 0.3,
-      }} />
+      <View style={{ padding: 16 }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>
+          {item.title}
+        </Text>
+        <Text style={{ fontSize: 14, color: '#666', lineHeight: 20 }}>
+          {item.description}
+        </Text>
+      </View>
     </View>
   );
 }

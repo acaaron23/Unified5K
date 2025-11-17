@@ -1,19 +1,11 @@
-import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View, } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 import FilterTabs from '../components/FilterTabs';
 import Header from '../components/Header';
 import HeroSection from '../components/HeroSection';
 import RaceCard from '../components/RaceCard';
 import SearchBar from '../components/SearchBar';
-
-interface Race {
-  id: number;
-  raceName: string;
-  location: string;
-  imageSource: { uri: string };
-  raceDate?: string;
-  isNotificationEnabled?: boolean;
-}
+import { raceService, type Race } from '../services/runsignup';
 
 interface ActiveFilters {
   live: boolean;
@@ -29,49 +21,135 @@ const IndexScreen: React.FC = () => {
     upcoming: true,
   });
 
+  const [races, setRaces] = useState<Race[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [notificationStates, setNotificationStates] = useState<{[key: number]: boolean}>({});
 
-  const mockRaces: Race[] = [
-    {
-      id: 1,
-      raceName: "Boston Marathon",
-      location: "Boston, MA",
-      imageSource: require('../assets/images/raceimage1.jpg'),
-      raceDate: "12/03",
-      isNotificationEnabled: false,
-    },
-    {
-      id: 2,
-      raceName: "NYC Inclusive 5K",
-      location: "New York, NY",
-      imageSource: require('../assets/images/raceimage3.jpg'),
-      raceDate: "12/03",
-      isNotificationEnabled: false,
-    },
-    {
-      id: 3,
-      raceName: "Chicago Run",
-      location: "Chicago, IL",
-      imageSource: require('../assets/images/raceimage4.jpg'),
-      raceDate: "12/03",
-      isNotificationEnabled: false,
-    },
-  ];
+  /**
+   * Fetch races based on active filters
+   * Currently showing mock data for testing
+   */
+  const fetchRaces = async () => {
+    setLoading(true);
+    setError(null);
 
-  const filteredRaces = mockRaces.filter((race) => {
-    // If no search query, show all races
-    if (!searchQuery.trim()) return true;
+    try {
+      // Show mock data for testing (no authentication required)
+      console.log('Showing sample races');
+      setRaces([
+        {
+          race_id: 1,
+          name: "Boston Marathon",
+          address: { city: "Boston", state: "MA" },
+          next_date: "2025-04-21",
+          last_date: "2025-04-21",
+          logo_url: require('../assets/images/raceimage1.jpg') as any,
+          description: "World's oldest annual marathon",
+        },
+        {
+          race_id: 2,
+          name: "NYC Inclusive 5K",
+          address: { city: "New York", state: "NY" },
+          next_date: "2025-05-15",
+          last_date: "2025-05-15",
+          logo_url: require('../assets/images/raceimage2.jpg') as any,
+          description: "Inclusive 5K race in Central Park",
+        },
+        {
+          race_id: 3,
+          name: "Chicago Run for Unity",
+          address: { city: "Chicago", state: "IL" },
+          next_date: "2025-06-10",
+          last_date: "2025-06-10",
+          logo_url: require('../assets/images/raceimage3.jpg') as any,
+          description: "Celebrating diversity through running",
+        },
+        {
+          race_id: 4,
+          name: "LA Marathon",
+          address: { city: "Los Angeles", state: "CA" },
+          next_date: "2025-03-16",
+          last_date: "2025-03-16",
+          logo_url: require('../assets/images/raceimage4.jpg') as any,
+          description: "Stadium to the Sea marathon",
+        },
+        {
+          race_id: 5,
+          name: "San Francisco Bay to Breakers",
+          address: { city: "San Francisco", state: "CA" },
+          next_date: "2025-05-18",
+          last_date: "2025-05-18",
+          logo_url: require('../assets/images/raceimage1.jpg') as any,
+          description: "Annual footrace in San Francisco",
+        },
+      ] as Race[]);
+    } catch (err: any) {
+      console.error('Error loading races:', err);
+      setError('Unable to load races');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Search races by query
+   */
+  const searchRaces = async (query: string) => {
+    if (!query.trim()) {
+      fetchRaces();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const results = await raceService.searchRaces(query, 25);
+      setRaces(results);
+    } catch (err: any) {
+      console.error('Error searching races:', err);
+      setError(err.message || 'Failed to search races');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchRaces();
+  }, [activeFilters]);
+
+  // Filter races based on search query and active filters
+  const filteredRaces = races.filter((race) => {
+    // If search query exists, filter by query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      const raceName = race.name.toLowerCase();
+      const location = `${race.address.city} ${race.address.state}`.toLowerCase();
+      
+      const matchesQuery = raceName.includes(query) || location.includes(query);
+      if (!matchesQuery) return false;
+    }
+
+    // Filter by status based on active filters
+    const status = raceService.getRaceStatus(race);
     
-    // Search in race name and location
-    const query = searchQuery.toLowerCase().trim();
-    const raceName = race.raceName.toLowerCase();
-    const location = race.location.toLowerCase();
-    
-    return raceName.includes(query) || location.includes(query);
+    if (status === 'live' && !activeFilters.live) return false;
+    if (status === 'upcoming' && !activeFilters.upcoming) return false;
+    if (status === 'past' && !activeFilters.past) return false;
+
+    return true;
   });
 
   const handleSearch = (query: string): void => {
     setSearchQuery(query);
+    
+    // Debounce search - wait for user to stop typing
+    if (query.trim()) {
+      const timeoutId = setTimeout(() => {
+        searchRaces(query);
+      }, 500);
+      clearTimeout(timeoutId);
+    }
   };
 
   const handleFilterChange = (filters: ActiveFilters): void => {
@@ -80,6 +158,8 @@ const IndexScreen: React.FC = () => {
 
   const handleRacePress = (raceId: number): void => {
     console.log(`Navigate to race details: ${raceId}`);
+    // TODO: Navigate to race details screen
+    // router.push(`/race_details?raceId=${raceId}`);
   };
 
   const handleNotificationPress = (raceId: number): void => {
@@ -89,6 +169,8 @@ const IndexScreen: React.FC = () => {
       ...prev,
       [raceId]: !prev[raceId]
     }));
+
+    // TODO: Implement notification subscription via API
   };
 
   return (
@@ -115,20 +197,54 @@ const IndexScreen: React.FC = () => {
             onFilterChange={handleFilterChange}
           />
           
-          <View style={styles.raceList}>
-            {filteredRaces.map((race) => (
-              <RaceCard
-                key={race.id}
-                raceName={race.raceName}
-                location={race.location}
-                imageSource={race.imageSource}
-                raceDate={race.raceDate}
-                isNotificationEnabled={notificationStates[race.id] || false}
-                onPress={() => handleRacePress(race.id)}
-                onNotificationPress={() => handleNotificationPress(race.id)}
-              />
-            ))}
-          </View>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#1BA8D8" />
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity 
+                style={styles.retryButton}
+                onPress={fetchRaces}
+              >
+                <Text style={styles.retryText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.raceList}>
+              {filteredRaces.map((race) => {
+                // Handle both local assets (number from require()) and remote URLs (string)
+                const imageSource = race.logo_url
+                  ? (typeof race.logo_url === 'string'
+                      ? { uri: race.logo_url }  // Remote URL
+                      : race.logo_url)           // Local asset from require()
+                  : require('../assets/images/raceimage1.jpg');
+
+                return (
+                  <RaceCard
+                    key={race.race_id}
+                    raceName={race.name}
+                    location={raceService.getRaceLocation(race)}
+                    imageSource={imageSource}
+                    raceDate={raceService.formatRaceDate(race)}
+                    isNotificationEnabled={notificationStates[race.race_id] || false}
+                    onPress={() => handleRacePress(race.race_id)}
+                    onNotificationPress={() => handleNotificationPress(race.race_id)}
+                  />
+                );
+              })}
+              
+              {filteredRaces.length === 0 && !loading && (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No races found</Text>
+                  <Text style={styles.emptySubtext}>
+                    Try adjusting your filters or search query
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -151,6 +267,58 @@ const styles = StyleSheet.create({
   
   raceList: {
     marginTop: 20,
+  },
+
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  errorContainer: {
+    paddingVertical: 60,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  errorText: {
+    fontSize: 16,
+    color: '#DC2626',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+
+  retryButton: {
+    backgroundColor: '#1BA8D8',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+
+  retryText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  emptyContainer: {
+    paddingVertical: 60,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+  },
+
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
   },
 });
 
