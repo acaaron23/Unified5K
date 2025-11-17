@@ -1,8 +1,12 @@
 # CI Pipeline
 
-## What It Does
+## CI Tool Used
 
-This project has an automated CI pipeline that runs on every push to the main branches. It performs three checks:
+This project uses **GitHub Actions** for continuous integration.
+
+## Tasks Implemented
+
+The CI pipeline performs three automated checks on every push:
 
 ### 1. Code Linting (ESLint)
 - Runs `npm run lint`
@@ -35,8 +39,12 @@ npm run type-check    # Check types
 npx expo export --platform web --output-dir dist  # Test build
 ```
 
-## When It Runs
+## How to Trigger the Pipeline
 
 The pipeline automatically runs on:
 - Pushes to `main`, `master`, `develop`, or `Aaron-RunSignUp` branches
 - Pull requests to `main`, `master`, or `develop` branches
+
+## Challenges Faced
+
+Challenges I faced when implementing this CI pipeline was knowing where to start. I began watching some YouTube videos for some guidance and asking my PM and TPM for any tips, and it helped quite a bit. I utilized tools such as Claude to guide me through, making sure I am executing the pipeline correctly and it has helped me learn how it's structured and how it runs. 
