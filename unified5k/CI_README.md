@@ -37,5 +37,4 @@ The pipeline automatically runs on:
 
 ## Challenges Faced
 
-Challenges I faced when implementing this CI pipeline was knowing where to start. I began watching some YouTube videos for some guidance and asking my PM and TPM for any tips, and it helped quite a bit. I utilized tools such as Claude to guide me through, making sure I am executing the pipeline correctly and it has helped me learn how it's structured and how it runs. 
-Afterwards, I was able to create the github/workflows directory with a yaml file. Within the yaml file was directions to run tests for 1: Code Linting, 2: Code Testing, and 3: Build Automation only after sucessful lint and code testing.
+Challenges we faced when implementing this CI pipeline was knowing where to start. We began watching some YouTube videos for some guidance and asking our PM and TPM for any tips, and it helped quite a bit. We utilized tools such as Claude to guide us through, making sure we are executing the pipeline correctly and it helped us learn how it's structured and how it runs. Afterwards, we were able to create the github/workflows directory with a yaml file. Within the yaml file was directions to run tests for 1: Code Linting, 2: Code Testing, and 3: Build Automation only after sucessful lint and code testing.
