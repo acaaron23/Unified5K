@@ -49,4 +49,3 @@ The pipeline automatically runs on:
 
 Challenges I faced when implementing this CI pipeline was knowing where to start. I began watching some YouTube videos for some guidance and asking my PM and TPM for any tips, and it helped quite a bit. I utilized tools such as Claude to guide me through, making sure I am executing the pipeline correctly and it has helped me learn how it's structured and how it runs. 
 Afterwards, I was able to create the github/workflows directory with a yaml file. Within the yaml file was directions to run tests for 1- Code Linting, 2- Unit Testing, 3- Build Automation only after sucessful lint and unit testing.
-
