@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import * as SecureStore from "expo-secure-store";
 import "./global.css";
 
-// --- Token cache setup ---
+// --- Token cache setup  ---
 const tokenCache = {
   async getToken(key: string) {
     try {
