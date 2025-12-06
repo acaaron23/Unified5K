@@ -7,19 +7,31 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // API Configuration
-const PRODUCTION_BASE_URL = 'https://runsignup.com';
-const TEST_BASE_URL = 'https://test.runsignup.com';
+const PRODUCTION_BASE_URL = 'https://api.runsignup.com/rest';
+const TEST_BASE_URL = 'https://api.runsignup.com/rest';
 
 // Use test environment for development
 const IS_PRODUCTION = false;
-// Use TEST environment (where your credentials are registered)
-const BASE_URL = 'https://test.runsignup.com';
+// Use API base URL (works for both production and test credentials)
+const BASE_URL = 'https://api.runsignup.com/rest';
 
 console.log('RunSignUp API URL:', BASE_URL);
 // API Credentials from environment variables
 // Note: API Key/Secret are optional - OAuth credentials are sufficient for most operations
 const API_KEY = process.env.EXPO_PUBLIC_RUNSIGNUP_API_KEY || '';
 const API_SECRET = process.env.EXPO_PUBLIC_RUNSIGNUP_API_SECRET || '';
+
+// Debug: Check if credentials are loaded
+if (API_KEY) {
+  console.log('API Key loaded:', API_KEY.substring(0, 8) + '...');
+} else {
+  console.warn('No API Key found in environment');
+}
+if (API_SECRET) {
+  console.log('API Secret loaded:', API_SECRET.substring(0, 8) + '...');
+} else {
+  console.warn('No API Secret found in environment');
+}
 
 // Storage keys
 const TOKEN_KEY = 'runsignup_access_token';
@@ -55,25 +67,48 @@ class RunSignUpApiService {
     this.client.interceptors.request.use(
       async (config) => {
         await this.ensureAuthenticated();
-        
+
         // Add API credentials to params if available
         if (!config.params) {
           config.params = {};
         }
-        
-        // Only add API key/secret if they're configured
-        // OAuth token is sufficient for authenticated requests
-        if (API_KEY && API_SECRET) {
-          config.params.api_key = API_KEY;
-          config.params.api_secret = API_SECRET;
-        }
-        
+
         config.params.format = 'json';
 
-        // Add OAuth token if available
-        if (this.accessToken) {
+        // Determine which authentication to use based on endpoint
+        const isUserEndpoint = config.url?.includes('/user') ||
+                               config.url?.includes('/registration') ||
+                               config.url?.includes('/participant');
+
+        const isPhotoEndpoint = config.url?.includes('/photos');
+
+        // Use OAuth token for user-specific endpoints, API key for public data
+        if (isUserEndpoint && this.accessToken) {
+          // User-specific endpoints: use OAuth Bearer token
           config.headers.Authorization = `Bearer ${this.accessToken}`;
+          console.log('Using OAuth Bearer token for user endpoint');
+        } else if (isPhotoEndpoint && API_KEY && API_SECRET) {
+          // Photo endpoints: use ONLY partner API key (no OAuth)
+          config.params.rsu_api_key = API_KEY;
+          config.headers['X-RSU-API-SECRET'] = API_SECRET;
+          console.log('Using partner API key for photo endpoint (no OAuth)');
+        } else if (API_KEY && API_SECRET) {
+          // Public endpoints (races, events): use API key
+          config.params.rsu_api_key = API_KEY;
+          config.headers['X-RSU-API-SECRET'] = API_SECRET;
+          console.log('Using API key for public endpoint');
+        } else if (this.accessToken) {
+          // Fallback to OAuth if API key not available
+          config.headers.Authorization = `Bearer ${this.accessToken}`;
+          console.log('Using OAuth Bearer token (fallback)');
         }
+
+        // Debug: Log request details
+        console.log('API Request:', {
+          url: config.url,
+          params: config.params,
+          hasAuthHeader: !!config.headers.Authorization,
+        });
 
         return config;
       },
@@ -195,6 +230,9 @@ class RunSignUpApiService {
           params: { ...params, ...config?.params },
         }
       );
+
+      // Debug: Log raw response
+      console.log('API Response for', endpoint, ':', JSON.stringify(response.data, null, 2).substring(0, 500));
 
       if (response.data.error) {
         throw new Error(

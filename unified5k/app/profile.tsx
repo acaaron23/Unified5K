@@ -30,7 +30,11 @@ export default function ProfileScreen() {
         unlinkAccount,
         fetchRegistrations,
         error: runSignUpError,
+        adminInfo,
     } = useRunSignUp();
+
+    // Check if user is admin (you can customize this logic)
+    const isAdmin = user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.isAdmin === true;
 
     const [selectedTab, setSelectedTab] = useState<'Participant' | 'Volunteer' | 'Organization'>('Participant');
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -216,6 +220,12 @@ export default function ProfileScreen() {
                         <View style={styles.errorBanner}>
                             <Ionicons name="alert-circle" size={20} color="#DC2626" />
                             <Text style={styles.errorText}>{runSignUpError}</Text>
+                        </View>
+                    )}
+                    {isAdmin && adminInfo && (
+                        <View style={styles.infoBanner}>
+                            <Ionicons name="information-circle" size={20} color="#10b981" />
+                            <Text style={styles.infoText}>{adminInfo}</Text>
                         </View>
                     )}
                     {!isLinked ? (
@@ -456,6 +466,22 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         fontSize: 14,
         color: '#DC2626',
+    },
+    infoBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#D1FAE5',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#10b981',
+    },
+    infoText: {
+        flex: 1,
+        marginLeft: 8,
+        fontSize: 14,
+        color: '#059669',
     },
     signOutContainer: { marginTop: 32, marginBottom: 40 },
     signOutButton: { borderRadius: 8, borderColor: '#DC2626', borderWidth: 1 },

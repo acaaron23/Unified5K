@@ -65,7 +65,7 @@ class UserService {
   async getUserInfo(userId: number): Promise<RunSignUpUser> {
     try {
       const response = await apiService.get<UserInfoResponse>(
-        `/rest/user/${userId}.json`
+        `/user/${userId}`
       );
       return response.user;
     } catch (error) {
@@ -104,7 +104,7 @@ class UserService {
       }
 
       const response = await apiService.get<RegistrationListResponse>(
-        `/rest/user/${userId}/registrations.json`,
+        `/user/${userId}/registrations`,
         params
       );
 
@@ -179,7 +179,7 @@ class UserService {
   ): Promise<RunSignUpUser> {
     try {
       const response = await apiService.post<UserInfoResponse>(
-        `/rest/user/${userId}.json`,
+        `/user/${userId}`,
         updates
       );
       return response.user;
@@ -196,7 +196,7 @@ class UserService {
   async searchUserByEmail(email: string): Promise<RunSignUpUser | null> {
     try {
       const response = await apiService.get<{ users: RunSignUpUser[] }>(
-        '/rest/users/search.json',
+        '/users/search',
         { email }
       );
 
@@ -220,7 +220,7 @@ class UserService {
   ): Promise<UserRegistration> {
     try {
       const response = await apiService.get<{ registration: UserRegistration }>(
-        `/rest/race/${raceId}/registration/${registrationId}.json`
+        `/race/${raceId}/registration/${registrationId}`
       );
       return response.registration;
     } catch (error) {
@@ -240,7 +240,7 @@ class UserService {
   ): Promise<boolean> {
     try {
       await apiService.post(
-        `/rest/race/${raceId}/registration/${registrationId}/cancel.json`,
+        `/race/${raceId}/registration/${registrationId}/cancel`,
         { reason }
       );
       return true;
@@ -260,7 +260,7 @@ class UserService {
   ): Promise<UserRegistration> {
     try {
       const response = await apiService.post<{ registration: UserRegistration }>(
-        `/rest/race/${raceId}/switch-participant-events.json`,
+        `/race/${raceId}/switch-participant-events`,
         {
           registration_id: registrationId,
           event_id: targetEventId,

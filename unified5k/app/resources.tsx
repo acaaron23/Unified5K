@@ -9,6 +9,7 @@ import {
   FlatList,
   Modal,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import Header from '@/components/Header';
@@ -363,6 +364,13 @@ export default function ResourcesScreen() {
   const [activeTab, setActiveTab] = useState<'training' | 'blogs'>('training');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<string>('recent');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setRefreshing(false);
+  };
 
   const blogList = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -421,6 +429,14 @@ export default function ResourcesScreen() {
           keyExtractor={(b) => b.id}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 20 }}
           renderItem={({ item }) => <BlogRow item={item} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#1BA8D8']}
+              tintColor="#1BA8D8"
+            />
+          }
           ListEmptyComponent={() => (
             <View style={{ paddingTop: 40 }}>
               <Text style={{ textAlign: 'center', color: '#999' }}>No blogs found.</Text>
@@ -433,6 +449,14 @@ export default function ResourcesScreen() {
           keyExtractor={(t) => t.id}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 20 }}
           renderItem={({ item }) => <TrainingPlanRow item={item} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#1BA8D8']}
+              tintColor="#1BA8D8"
+            />
+          }
           ListEmptyComponent={() => (
             <View style={{ paddingTop: 40 }}>
               <Text style={{ textAlign: 'center', color: '#999' }}>No training plans found.</Text>

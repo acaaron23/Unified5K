@@ -15,10 +15,12 @@ import {
   Modal,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import Header from '../components/Header';
 import { photoService, type RacePhoto } from '../services/runsignup';
+import { useRunSignUp } from '../hooks/useRunSignUp';
 
 // ===== Types =====
 type Article = {
@@ -313,70 +315,124 @@ export default function MediaNewsScreen() {
   const [mode, setMode] = useState<'photos' | 'news'>('photos');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<string>('recent');
-  
+
   // Photo state
   const [photos, setPhotos] = useState<RacePhoto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Get user's race registrations
+  const { upcomingRegistrations, pastRegistrations, isLinked } = useRunSignUp();
 
   /**
-   * Fetch photos from races
-   * Currently showing mock data for testing
+   * Fetch photos from user's registered races
+   * Uses RunSignUp Photo API
    */
-  const fetchPhotos = async () => {
-    setLoading(true);
+  const fetchPhotos = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     try {
-      // Show mock photos for testing (no API required)
-      const mockPhotos: RacePhoto[] = [
-        {
-          photo_id: 1,
-          album_id: 1,
-          race_event_days_id: 1,
-          uploaded_ts: Date.now() / 1000,
-          uploaded_filename: 'boston_marathon_finish.jpg',
-          original: { image_url: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1200', width: 1200, height: 800 },
-          thumbnail: { image_url: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400', width: 400, height: 267 },
-          large: { image_url: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800', width: 800, height: 533 },
-          caption: 'Boston Marathon finish line celebration',
-          bibs: [1234],
-          photographer_name: 'RunPhoto Pro',
-        },
-        {
-          photo_id: 2,
-          album_id: 2,
-          race_event_days_id: 2,
-          uploaded_ts: Date.now() / 1000 - 86400,
-          uploaded_filename: 'nyc_5k_runners.jpg',
-          original: { image_url: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=1200', width: 1200, height: 800 },
-          thumbnail: { image_url: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=400', width: 400, height: 267 },
-          large: { image_url: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=800', width: 800, height: 533 },
-          caption: 'NYC 5K runners in Central Park',
-          bibs: [5678, 5679],
-          photographer_name: 'Race Photos Inc',
-        },
-        {
-          photo_id: 3,
-          album_id: 3,
-          race_event_days_id: 3,
-          uploaded_ts: Date.now() / 1000 - 172800,
-          uploaded_filename: 'chicago_unity_run.jpg',
-          original: { image_url: 'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?w=1200', width: 1200, height: 800 },
-          thumbnail: { image_url: 'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?w=400', width: 400, height: 267 },
-          large: { image_url: 'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?w=800', width: 800, height: 533 },
-          caption: 'Chicago Run for Unity participants',
-          bibs: [9012],
-        },
-      ];
+      console.log('[Media] Fetching photos from all races...');
 
-      setPhotos(mockPhotos);
+      // Import race service to get races
+      const { raceService } = await import('../services/runsignup');
+
+      // Get recent races (both past and upcoming)
+      console.log('[Media] Fetching races...');
+      const [pastRaces, upcomingRaces] = await Promise.all([
+        raceService.getPastRaces(50, 730), // Last 2 years, more races
+        raceService.getUpcomingRaces(50), // More upcoming races
+      ]);
+
+      console.log(`[Media] Found ${pastRaces.length} past races and ${upcomingRaces.length} upcoming races`);
+
+      // Prioritize past races (more likely to have photos)
+      const allRaces = [...pastRaces, ...upcomingRaces];
+      const raceIds = allRaces.map(race => race.race_id).slice(0, 30); // Check 30 races
+
+      console.log(`[Media] Will fetch photos from ${raceIds.length} races:`, raceIds);
+
+      if (raceIds.length === 0) {
+        console.log('[Media] No races found');
+        setPhotos([]);
+        return;
+      }
+
+      // Fetch photos from all races
+      const allPhotos: RacePhoto[] = [];
+
+      let racesChecked = 0;
+      let racesWithPhotos = 0;
+
+      for (const raceId of raceIds) {
+        racesChecked++;
+
+        // Stop early if we found enough photos
+        if (allPhotos.length >= 50) {
+          console.log(`[Media] 🎉 Found enough photos (${allPhotos.length}), stopping early`);
+          break;
+        }
+
+        try {
+          console.log(`[Media] [${racesChecked}/${raceIds.length}] Checking race ${raceId}...`);
+          const response = await photoService.getRacePhotos(raceId, {
+            num: 10, // Get more per race
+            page: 1,
+          });
+
+          if (response.photos && response.photos.length > 0) {
+            racesWithPhotos++;
+            allPhotos.push(...response.photos);
+            console.log(`[Media] 📸 [${racesChecked}/${raceIds.length}] Race ${raceId} has ${response.photos.length} photos! Total: ${allPhotos.length}`);
+          } else {
+            console.log(`[Media] [${racesChecked}/${raceIds.length}] Race ${raceId}: no photos`);
+          }
+        } catch (photoError: any) {
+          console.error(`[Media] [${racesChecked}/${raceIds.length}] ❌ Error for race ${raceId}:`, photoError.message);
+          // Continue with other races even if one fails
+        }
+      }
+
+      console.log(`[Media] ✅ Finished: Checked ${racesChecked} races, ${racesWithPhotos} had photos. Total photos: ${allPhotos.length}`);
+
+      console.log(`[Media] Total photos fetched: ${allPhotos.length}`);
+
+      // Sort by upload timestamp (most recent first)
+      allPhotos.sort((a, b) => b.uploaded_ts - a.uploaded_ts);
+
+      setPhotos(allPhotos);
+
+      if (allPhotos.length === 0) {
+        console.log('[Media] No photos available from any registered race');
+      }
     } catch (err: any) {
-      console.error('Error loading photos:', err);
-      setError(err.message || 'Failed to load photos');
+      console.error('[Media] Error loading photos:', err);
+
+      // Handle specific API authentication errors
+      if (err.message?.includes('Key authentication failed') ||
+          err.message?.includes('API Error 6')) {
+        setError('API authentication required. Please ensure your RunSignUp account is properly linked.');
+      } else {
+        setError(err.message || 'Failed to load photos');
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  /**
+   * Handle pull-to-refresh
+   */
+  const handleRefresh = async () => {
+    console.log('[Media] User triggered refresh');
+    await fetchPhotos(true);
   };
 
   // Load photos when mode changes to photos
@@ -453,51 +509,72 @@ export default function MediaNewsScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 20, gap: 16 }}
           renderItem={({ item }) => <ArticleCard item={item} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#1BA8D8']}
+              tintColor="#1BA8D8"
+            />
+          }
           ListEmptyComponent={() => (
             <View style={{ paddingHorizontal: 24, paddingTop: 40 }}>
               <Text style={{ textAlign: 'center', color: '#999' }}>No articles found.</Text>
             </View>
           )}
         />
+      ) : loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#1BA8D8" />
+          <Text style={{ marginTop: 16, color: '#666' }}>Loading photos...</Text>
+        </View>
+      ) : error ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <Ionicons name="alert-circle" size={64} color="#DC2626" />
+          <Text style={{ color: '#DC2626', marginTop: 16, marginBottom: 16, textAlign: 'center' }}>
+            {error}
+          </Text>
+          <TouchableOpacity
+            onPress={() => fetchPhotos()}
+            style={{
+              backgroundColor: '#1BA8D8',
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '600' }}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
-        <>
-          {loading ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <ActivityIndicator size="large" color="#1BA8D8" />
-              <Text style={{ marginTop: 16, color: '#666' }}>Loading photos...</Text>
-            </View>
-          ) : error ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-              <Text style={{ color: '#DC2626', marginBottom: 16 }}>{error}</Text>
-              <TouchableOpacity
-                onPress={fetchPhotos}
-                style={{
-                  backgroundColor: '#1BA8D8',
-                  paddingHorizontal: 24,
-                  paddingVertical: 12,
-                  borderRadius: 8,
-                }}
-              >
-                <Text style={{ color: '#fff', fontWeight: '600' }}>Retry</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <FlatList
-              data={filteredPhotos}
-              keyExtractor={(item) => item.photo_id.toString()}
-              contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 20 }}
-              renderItem={({ item }) => <PhotoCard item={item} />}
-              ListEmptyComponent={() => (
-                <View style={{ paddingTop: 40 }}>
-                  <Text style={{ textAlign: 'center', color: '#999' }}>No photos available yet.</Text>
-                  <Text style={{ textAlign: 'center', color: '#999', marginTop: 8, fontSize: 12 }}>
-                    Photos will appear here after races are completed.
-                  </Text>
-                </View>
-              )}
+        <FlatList
+          data={filteredPhotos}
+          keyExtractor={(item) => item.photo_id.toString()}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 20 }}
+          renderItem={({ item }) => <PhotoCard item={item} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#1BA8D8']}
+              tintColor="#1BA8D8"
             />
+          }
+          ListEmptyComponent={() => (
+            <View style={{ paddingTop: 40, paddingHorizontal: 24, alignItems: 'center' }}>
+              <Ionicons name="images-outline" size={64} color="#ccc" style={{ marginBottom: 16 }} />
+              <Text style={{ textAlign: 'center', color: '#666', fontSize: 16, fontWeight: '600', marginBottom: 8 }}>
+                No Photos Available
+              </Text>
+              <Text style={{ textAlign: 'center', color: '#999', fontSize: 14, lineHeight: 20 }}>
+                Race organizers upload photos after events are completed.
+              </Text>
+              <Text style={{ textAlign: 'center', color: '#999', fontSize: 14, marginTop: 8, lineHeight: 20 }}>
+                Check back after your race or ask the organizer about photo availability.
+              </Text>
+            </View>
           )}
-        </>
+        />
       )}
     </SafeAreaView>
   );

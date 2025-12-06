@@ -21,6 +21,7 @@ export interface RunSignUpState {
   isLinked: boolean;
   isLoading: boolean;
   error: string | null;
+  adminInfo: string | null; // Info message for admins only
 
   // User data
   runSignUpUser: RunSignUpUser | null;
@@ -29,7 +30,7 @@ export interface RunSignUpState {
   // Registrations
   upcomingRegistrations: UserRegistration[];
   pastRegistrations: UserRegistration[];
-  
+
   // Races
   nearbyRaces: Race[];
 }
@@ -61,6 +62,7 @@ export function useRunSignUp() {
     isLinked: false,
     isLoading: false,
     error: null,
+    adminInfo: null,
     runSignUpUser: null,
     runSignUpUserId: null,
     upcomingRegistrations: [],
@@ -144,10 +146,11 @@ export function useRunSignUp() {
           // Keep the basic OAuth user info we already have
         }
       } else {
-        // Placeholder user - set appropriate message
+        // Placeholder user - don't show any message to regular users
+        // Admins can check adminInfo field if needed
         setState(prev => ({
           ...prev,
-          error: 'Account linked. Full access requires RunSignUp partner/affiliate API credentials.',
+          adminInfo: 'Full API access requires RunSignUp partner/affiliate credentials.',
         }));
       }
     } catch (error: any) {
@@ -262,10 +265,11 @@ export function useRunSignUp() {
       // Check if it's an API key error
       if (error.message?.includes('Key authentication failed') || error.message?.includes('API Error 6')) {
         console.warn('Cannot fetch registrations: API keys required (partner/affiliate access)');
+        // Don't show error to regular users - just log it
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: 'Full API access requires RunSignUp partner status. Account is linked but detailed info unavailable.',
+          adminInfo: 'Full API access requires RunSignUp partner status.',
         }));
       } else {
         setState(prev => ({

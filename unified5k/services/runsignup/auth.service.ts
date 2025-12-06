@@ -10,6 +10,8 @@ const OAUTH_CLIENT_ID = process.env.EXPO_PUBLIC_RUNSIGNUP_OAUTH_CLIENT_ID || '';
 const OAUTH_CLIENT_SECRET = process.env.EXPO_PUBLIC_RUNSIGNUP_OAUTH_CLIENT_SECRET || '';
 
 // OAuth endpoints - RunSignup uses /Profile/OAuth2/ for both authorization and token
+// OAuth endpoints are at the root domain, not under /rest
+const OAUTH_BASE_URL = 'https://runsignup.com';
 const AUTHORIZE_ENDPOINT = '/Profile/OAuth2/RequestGrant';
 const TOKEN_ENDPOINT = '/Profile/OAuth2/GetAccessToken';
 
@@ -36,8 +38,8 @@ export interface OAuthUser {
 
 class OAuth2Service {
   private discovery = {
-    authorizationEndpoint: `${apiService.getBaseUrl()}${AUTHORIZE_ENDPOINT}`,
-    tokenEndpoint: `${apiService.getBaseUrl()}${TOKEN_ENDPOINT}`,
+    authorizationEndpoint: `${OAUTH_BASE_URL}${AUTHORIZE_ENDPOINT}`,
+    tokenEndpoint: `${OAUTH_BASE_URL}${TOKEN_ENDPOINT}`,
   };
 
   // PKCE methods removed - not currently used
@@ -55,6 +57,8 @@ class OAuth2Service {
 
       console.log('Starting OAuth flow with redirect URI:', redirectUri);
       console.log('Authorization endpoint:', this.discovery.authorizationEndpoint);
+      console.log('OAuth Client ID:', OAUTH_CLIENT_ID);
+      console.log('Requested scopes:', ['rsu_api_read', 'rsu_api_write']);
 
       const authRequest = new AuthSession.AuthRequest({
         clientId: OAUTH_CLIENT_ID,
@@ -167,7 +171,7 @@ class OAuth2Service {
         refresh_token: refreshToken,
       });
 
-      const response = await fetch(`${apiService.getBaseUrl()}${TOKEN_ENDPOINT}`, {
+      const response = await fetch(`${OAUTH_BASE_URL}${TOKEN_ENDPOINT}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -205,20 +209,13 @@ class OAuth2Service {
    */
   async getCurrentUser(): Promise<OAuthUser> {
     try {
-      // Try OAuth userinfo endpoint first (doesn't require API keys)
-      // Common OAuth 2.0 pattern: /oauth/userinfo or similar
-      const response = await apiService.get('/Profile/OAuth2/UserInfo');
+      // Try to get user info using OAuth token
+      const response = await apiService.get('/user/me');
       return response.user || response;
     } catch (error) {
       console.error('Get current user error:', error);
-      // Try alternative endpoint
-      try {
-        const response = await apiService.get('/rest/user/me');
-        return response.user || response;
-      } catch (error2) {
-        console.error('Alternative user endpoint also failed:', error2);
-        throw error;
-      }
+      // OAuth token alone may not be enough without partner status
+      throw error;
     }
   }
 

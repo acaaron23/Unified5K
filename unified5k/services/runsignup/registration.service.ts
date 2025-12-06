@@ -92,7 +92,7 @@ class RegistrationService {
   ): Promise<RegistrationFields> {
     try {
       const response = await apiService.get<RegistrationFields>(
-        `/rest/race/${raceId}/event/${eventId}/registration-fields.json`
+        `/race/${raceId}/event/${eventId}/registration-fields`
       );
       return response;
     } catch (error) {
@@ -110,7 +110,7 @@ class RegistrationService {
   ): Promise<EventPricing> {
     try {
       const response = await apiService.get<{ pricing: EventPricing }>(
-        `/rest/race/${raceId}/event/${eventId}/pricing.json`
+        `/race/${raceId}/event/${eventId}/pricing`
       );
       return response.pricing;
     } catch (error) {
@@ -134,7 +134,7 @@ class RegistrationService {
   }> {
     try {
       const response = await apiService.get(
-        `/rest/race/${raceId}/event/${eventId}/validate-coupon.json`,
+        `/race/${raceId}/event/${eventId}/validate-coupon`,
         { coupon_code: couponCode }
       );
       return response;
@@ -153,7 +153,7 @@ class RegistrationService {
   ): Promise<RegistrationResponse> {
     try {
       const response = await apiService.post<RegistrationResponse>(
-        `/rest/race/${raceId}/registration/add.json`,
+        `/race/${raceId}/registration/add`,
         this.formatRegistrationData(registrationData)
       );
 
@@ -226,7 +226,7 @@ class RegistrationService {
   ): Promise<UserRegistration> {
     try {
       const response = await apiService.post<{ registration: UserRegistration }>(
-        `/rest/race/${raceId}/registration/${registrationId}/update.json`,
+        `/race/${raceId}/registration/${registrationId}/update`,
         this.formatRegistrationData(updates as RegistrationRequest)
       );
       return response.registration;
@@ -249,7 +249,7 @@ class RegistrationService {
   }> {
     try {
       const response = await apiService.get(
-        `/rest/race/${raceId}/event/${eventId}/availability.json`
+        `/race/${raceId}/event/${eventId}/availability`
       );
       return response;
     } catch (error) {
@@ -271,7 +271,7 @@ class RegistrationService {
   }> {
     try {
       const response = await apiService.get(
-        `/rest/race/${raceId}/registration/${registrationId}/status.json`
+        `/race/${raceId}/registration/${registrationId}/status`
       );
       return response;
     } catch (error) {
@@ -297,7 +297,7 @@ class RegistrationService {
   }> {
     try {
       const response = await apiService.post(
-        `/rest/race/${raceId}/event/${eventId}/waitlist/add.json`,
+        `/race/${raceId}/event/${eventId}/waitlist/add`,
         userData
       );
       return response;
@@ -313,7 +313,7 @@ class RegistrationService {
   async getTShirtSizes(raceId: number): Promise<string[]> {
     try {
       const response = await apiService.get<{ sizes: string[] }>(
-        `/rest/race/${raceId}/tshirt-sizes.json`
+        `/race/${raceId}/tshirt-sizes`
       );
       return response.sizes || ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
     } catch (error) {
@@ -352,7 +352,7 @@ class RegistrationService {
       }
 
       const response = await apiService.get(
-        `/rest/race/${raceId}/calculate-cost.json`,
+        `/race/${raceId}/calculate-cost`,
         params
       );
       return response;
@@ -373,7 +373,7 @@ class RegistrationService {
   ): Promise<string> {
     try {
       const response = await apiService.get<{ payment_url: string }>(
-        `/rest/race/${raceId}/registration/${registrationId}/payment-url.json`
+        `/race/${raceId}/registration/${registrationId}/payment-url`
       );
       return response.payment_url;
     } catch (error) {
@@ -396,7 +396,7 @@ class RegistrationService {
   }> {
     try {
       const response = await apiService.get(
-        `/rest/race/${raceId}/event/${eventId}/verify-eligibility.json`,
+        `/race/${raceId}/event/${eventId}/verify-eligibility`,
         { email }
       );
       return response;

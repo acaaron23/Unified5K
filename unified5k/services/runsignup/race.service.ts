@@ -111,14 +111,23 @@ class RaceService {
       if (options?.radius) params.radius = options.radius;
       if (options?.startDate) params.start_date = options.startDate;
       if (options?.endDate) params.end_date = options.endDate;
-      if (options?.sortDirection) params.sort = options.sortDirection;
+      if (options?.sortDirection) {
+        // API expects full sort string like "date ASC" or "date DESC"
+        params.sort = `date ${options.sortDirection.toUpperCase()}`;
+      }
 
-      const response = await apiService.get<RaceListResponse>(
-        '/rest/races.json',
+      const response = await apiService.get<any>(
+        '/races',
         params
       );
 
-      return response;
+      // Parse the response - each item has a nested 'race' object
+      const races = response.races?.map((item: any) => item.race) || [];
+
+      return {
+        races,
+        total_count: response.total_count || races.length
+      };
     } catch (error) {
       console.error('Get races error:', error);
       throw error;
@@ -205,13 +214,14 @@ class RaceService {
   async getRaceDetails(raceId: number, includeEvents: boolean = true): Promise<Race> {
     try {
       const params = includeEvents ? { events: 'T' } : {};
-      
-      const response = await apiService.get<RaceDetailResponse>(
-        `/rest/race/${raceId}.json`,
+
+      const response = await apiService.get<any>(
+        `/race/${raceId}`,
         params
       );
 
-      return response.race;
+      // Response has a nested structure: { race: { race: {...} } }
+      return response.race?.race || response.race;
     } catch (error) {
       console.error('Get race details error:', error);
       throw error;
@@ -244,7 +254,7 @@ class RaceService {
       }
 
       const response = await apiService.get<RaceParticipantsResponse>(
-        `/rest/race/${raceId}/participants.json`,
+        `/race/${raceId}/participants`,
         params
       );
 
@@ -338,27 +348,46 @@ class RaceService {
    * Determine race schedule status (live, upcoming, past)
    */
   getRaceStatus(race: Race): 'live' | 'upcoming' | 'past' {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const nextDate = new Date(race.next_date);
-    nextDate.setHours(0, 0, 0, 0);
-    
-    const lastDate = new Date(race.last_date);
-    lastDate.setHours(0, 0, 0, 0);
-
-    // Race is live if today is between next_date and last_date
-    if (today >= nextDate && today <= lastDate) {
-      return 'live';
+    if (!race.next_date || !race.last_date) {
+      return 'upcoming'; // Default to upcoming if dates are missing
     }
 
-    // Race is upcoming if next_date is in the future
-    if (today < nextDate) {
-      return 'upcoming';
-    }
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    // Otherwise, race is past
-    return 'past';
+      // Parse MM/DD/YYYY format dates from API
+      const parseDate = (dateStr: string): Date => {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          // MM/DD/YYYY format
+          return new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+        }
+        // Fallback to standard parsing
+        return new Date(dateStr);
+      };
+
+      const nextDate = parseDate(race.next_date);
+      nextDate.setHours(0, 0, 0, 0);
+
+      const lastDate = parseDate(race.last_date);
+      lastDate.setHours(0, 0, 0, 0);
+
+      // Race is live if today is between next_date and last_date
+      if (today >= nextDate && today <= lastDate) {
+        return 'live';
+      }
+
+      // Race is upcoming if next_date is in the future
+      if (today < nextDate) {
+        return 'upcoming';
+      }
+
+      // Otherwise, race is past
+      return 'past';
+    } catch {
+      return 'upcoming'; // Default to upcoming on error
+    }
   }
 
   /**
@@ -366,12 +395,30 @@ class RaceService {
    */
   formatRaceDate(race: Race): string {
     try {
+      if (!race.next_date) {
+        return 'TBA';
+      }
+
+      // API returns dates in "MM/DD/YYYY" format
+      // Extract month and day directly
+      const dateParts = race.next_date.split('/');
+      if (dateParts.length === 3) {
+        const month = dateParts[0].padStart(2, '0');
+        const day = dateParts[1].padStart(2, '0');
+        return `${month}/${day}`;
+      }
+
+      // Fallback: try parsing as standard date
       const date = new Date(race.next_date);
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      return `${month}/${day}`;
+      if (!isNaN(date.getTime())) {
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${month}/${day}`;
+      }
+
+      return 'TBA';
     } catch {
-      return '';
+      return 'TBA';
     }
   }
 
@@ -380,9 +427,11 @@ class RaceService {
    */
   getRaceLocation(race: Race): string {
     const parts = [];
-    if (race.address.city) parts.push(race.address.city);
-    if (race.address.state) parts.push(race.address.state);
-    return parts.join(', ');
+    if (race.address) {
+      if (race.address.city) parts.push(race.address.city);
+      if (race.address.state) parts.push(race.address.state);
+    }
+    return parts.length > 0 ? parts.join(', ') : 'Location TBA';
   }
 }
 

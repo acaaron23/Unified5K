@@ -62,8 +62,33 @@ class PhotoService {
     }
   ): Promise<PhotosResponse> {
     try {
+      console.log(`[PhotoService] Attempting to get photos for race ${raceId}`);
+
+      // Import race service to get race details
+      const { raceService } = await import('./race.service');
+
+      // Get race details to find race_event_days_id
+      const raceDetails = await raceService.getRaceDetails(raceId, true);
+
+      if (!raceDetails.events || raceDetails.events.length === 0) {
+        console.log(`[PhotoService] No events found for race ${raceId}`);
+        return { photos: [], total_count: 0 };
+      }
+
+      // Get race_event_days_id from the first event (or use provided one)
+      const raceEventDaysId = options?.raceEventDaysId || (raceDetails.events[0] as any).race_event_days_id;
+
+      if (!raceEventDaysId) {
+        console.log(`[PhotoService] No race_event_days_id found for race ${raceId}`);
+        return { photos: [], total_count: 0 };
+      }
+
+      console.log(`[PhotoService] Using race_event_days_id: ${raceEventDaysId}`);
+
+      // Use correct endpoint from documentation
       const params: Record<string, any> = {
         race_id: raceId,
+        race_event_days_id: raceEventDaysId,
         page: options?.page || 1,
         num: options?.num || 100,
         include_participant_uploads: options?.includeParticipantUploads !== false ? 'T' : 'F',
@@ -72,23 +97,24 @@ class PhotoService {
       if (options?.albumId) {
         params.generic_photo_album_id = options.albumId;
       }
-      
-      if (options?.raceEventDaysId) {
-        params.race_event_days_id = options.raceEventDaysId;
-      }
 
       if (options?.uploadedSince) {
         params.uploaded_since_timestamp = options.uploadedSince;
       }
 
-      const response = await apiService.get<PhotosResponse>(
-        '/rest/v2/photos/get-race-photos.json',
+      const response = await apiService.get<any>(
+        '/v2/photos/get-race-photos.json',
         params
       );
 
-      return response;
-    } catch (error) {
-      console.error('Get race photos error:', error);
+      console.log(`[PhotoService] ✅ Successfully fetched photos for race ${raceId}`);
+
+      return {
+        photos: response.photos || [],
+        total_count: response.total_count || 0,
+      };
+    } catch (error: any) {
+      console.error(`[PhotoService] ❌ Error fetching photos:`, error.message);
       throw error;
     }
   }
@@ -103,16 +129,22 @@ class PhotoService {
     perPage: number = 50
   ): Promise<RacePhoto[]> {
     try {
-      const response = await this.getRacePhotos(raceId, {
-        albumId,
-        page,
-        num: perPage,
-      });
+      console.log(`[PhotoService] Fetching photos from album ${albumId}`);
 
-      return response.photos || [];
-    } catch (error) {
-      console.error('Get album photos error:', error);
-      throw error;
+      const response = await apiService.get<any>(
+        `/race/${raceId}/albums/${albumId}/photos`,
+        {
+          page: page,
+          results_per_page: perPage,
+        }
+      );
+
+      const photos = response.photos || [];
+      console.log(`[PhotoService] Album ${albumId}: ${photos.length} photos found`);
+      return photos;
+    } catch (error: any) {
+      console.log(`[PhotoService] Get album photos error:`, error.message);
+      return [];
     }
   }
 
@@ -121,14 +153,17 @@ class PhotoService {
    */
   async getRaceAlbums(raceId: number): Promise<PhotoAlbum[]> {
     try {
-      const response = await apiService.get<AlbumsResponse>(
-        `/rest/race/${raceId}/photo-albums.json`
+      console.log(`[PhotoService] Fetching albums for race ${raceId}`);
+      const response = await apiService.get<any>(
+        `/race/${raceId}/photo-albums`
       );
 
-      return response.albums || [];
-    } catch (error) {
-      console.error('Get race albums error:', error);
-      // Return empty array if albums endpoint doesn't exist
+      const albums = response.albums || [];
+      console.log(`[PhotoService] Albums response:`, albums.length > 0 ? `${albums.length} albums found` : 'No albums');
+      return albums;
+    } catch (error: any) {
+      console.log(`[PhotoService] Get race albums error (race may not have photos):`, error.message);
+      // Return empty array if albums endpoint doesn't exist or race has no photos
       return [];
     }
   }

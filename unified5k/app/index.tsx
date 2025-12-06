@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import FilterTabs from '../components/FilterTabs';
 import Header from '../components/Header';
 import HeroSection from '../components/HeroSection';
@@ -14,6 +16,10 @@ interface ActiveFilters {
 }
 
 const IndexScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const router = useRouter();
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     live: true,
@@ -28,65 +34,29 @@ const IndexScreen: React.FC = () => {
 
   /**
    * Fetch races based on active filters
-   * Currently showing mock data for testing
+   * Fetches real data from RunSignUp API
    */
   const fetchRaces = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Show mock data for testing (no authentication required)
-      console.log('Showing sample races');
-      setRaces([
-        {
-          race_id: 1,
-          name: "Boston Marathon",
-          address: { city: "Boston", state: "MA" },
-          next_date: "2025-04-21",
-          last_date: "2025-04-21",
-          logo_url: require('../assets/images/raceimage1.jpg') as any,
-          description: "World's oldest annual marathon",
-        },
-        {
-          race_id: 2,
-          name: "NYC Inclusive 5K",
-          address: { city: "New York", state: "NY" },
-          next_date: "2025-05-15",
-          last_date: "2025-05-15",
-          logo_url: require('../assets/images/raceimage2.jpg') as any,
-          description: "Inclusive 5K race in Central Park",
-        },
-        {
-          race_id: 3,
-          name: "Chicago Run for Unity",
-          address: { city: "Chicago", state: "IL" },
-          next_date: "2025-06-10",
-          last_date: "2025-06-10",
-          logo_url: require('../assets/images/raceimage3.jpg') as any,
-          description: "Celebrating diversity through running",
-        },
-        {
-          race_id: 4,
-          name: "LA Marathon",
-          address: { city: "Los Angeles", state: "CA" },
-          next_date: "2025-03-16",
-          last_date: "2025-03-16",
-          logo_url: require('../assets/images/raceimage4.jpg') as any,
-          description: "Stadium to the Sea marathon",
-        },
-        {
-          race_id: 5,
-          name: "San Francisco Bay to Breakers",
-          address: { city: "San Francisco", state: "CA" },
-          next_date: "2025-05-18",
-          last_date: "2025-05-18",
-          logo_url: require('../assets/images/raceimage1.jpg') as any,
-          description: "Annual footrace in San Francisco",
-        },
-      ] as Race[]);
+      console.log('Fetching all available races from API...');
+
+      // Fetch ALL races without date restrictions
+      // Increase results_per_page to get more races
+      const response = await raceService.getRaces({
+        resultsPerPage: 100, // Fetch up to 100 races
+        events: true, // Include event details
+      });
+
+      const allRaces = response.races || [];
+
+      console.log(`Successfully fetched ${allRaces.length} races`);
+      setRaces(allRaces);
     } catch (err: any) {
       console.error('Error loading races:', err);
-      setError('Unable to load races');
+      setError(err.message || 'Unable to load races. Please check your API credentials.');
     } finally {
       setLoading(false);
     }
@@ -117,6 +87,16 @@ const IndexScreen: React.FC = () => {
   useEffect(() => {
     fetchRaces();
   }, [activeFilters]);
+
+  // Scroll to top when tab is pressed
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('tabPress' as any, (e: any) => {
+      // Scroll to top when home tab is pressed again
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   // Filter races based on search query and active filters
   const filteredRaces = races.filter((race) => {
@@ -158,8 +138,7 @@ const IndexScreen: React.FC = () => {
 
   const handleRacePress = (raceId: number): void => {
     console.log(`Navigate to race details: ${raceId}`);
-    // TODO: Navigate to race details screen
-    // router.push(`/race_details?raceId=${raceId}`);
+    router.push(`/race_details?raceId=${raceId}`);
   };
 
   const handleNotificationPress = (raceId: number): void => {
@@ -177,7 +156,8 @@ const IndexScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      <ScrollView 
+      <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
