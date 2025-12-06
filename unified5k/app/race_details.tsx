@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Image, View, ActivityIndicator, Text, ScrollView } from "react-native";
+import { Button, Image, View, ActivityIndicator, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -106,14 +106,40 @@ export default function RaceDetails() {
     );
   }
 
-  // Format date
+  // Format date - handle MM/DD/YYYY format from API
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    if (!dateStr) return 'TBA';
+
+    try {
+      // API returns dates in "MM/DD/YYYY" format
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const month = parseInt(parts[0]) - 1; // Month is 0-indexed
+        const day = parseInt(parts[1]);
+        const year = parseInt(parts[2]);
+        const date = new Date(year, month, day);
+
+        return date.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      }
+
+      // Fallback to standard parsing
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      }
+
+      return 'TBA';
+    } catch {
+      return 'TBA';
+    }
   };
 
   // Get first event time if available
@@ -129,26 +155,38 @@ export default function RaceDetails() {
   const date = formatDate(race.next_date);
   const time = getEventTime();
 
+  // Get race image - use logo_url or banner_url from API, or fallback
+  const getRaceImage = () => {
+    if (race.logo_url) {
+      return typeof race.logo_url === 'string'
+        ? { uri: race.logo_url }
+        : race.logo_url;
+    }
+    if (race.banner_url) {
+      return typeof race.banner_url === 'string'
+        ? { uri: race.banner_url }
+        : race.banner_url;
+    }
+    return require('@/assets/images/raceimage1.jpg');
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={styles.container}>
       <Header />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        <View className="flex-col items-center space-y-5 justify-center bg-white p-4">
-          <Image
-            source={require('@/assets/images/unified-5k-logo.png')}
-            style={{ width: 200, height: 100, resizeMode: 'contain' }}
-          />
-
-          <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 16 }}>
-            {race.name}
-          </Text>
-
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.content}>
           {photos.length > 0 ? (
-            <ImageCarousel imageResponse={photos} />
+            <View style={styles.carouselContainer}>
+              <ImageCarousel imageResponse={photos} />
+            </View>
           ) : (
-            <View style={{ width: '100%', height: 200, backgroundColor: '#f3f4f6', borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: '#9ca3af' }}>No photos available</Text>
+            <View style={styles.imageContainer}>
+              <Image
+                source={getRaceImage()}
+                style={styles.raceImage}
+                resizeMode="cover"
+              />
             </View>
           )}
 
@@ -160,26 +198,98 @@ export default function RaceDetails() {
 
           <DonationBar currentAmount={8000} totalAmount={10000} />
 
-          <Button
-            title="Become a Sponsor/Vendor"
-            onPress={() => { }}
-            color="#00AEEF"
-          />
+          <TouchableOpacity
+            style={styles.sponsorButton}
+            onPress={() => router.push('/sponsor-tiers')}
+          >
+            <Text style={styles.sponsorButtonText}>Become a Sponsor/Vendor</Text>
+          </TouchableOpacity>
+
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => { }}
+            >
+              <Text style={styles.actionButtonText}>Participate</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => { }}
+            >
+              <Text style={styles.actionButtonText}>Volunteer</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
-
-      <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 16, paddingHorizontal: 20 }}>
-        <Button
-          title="Participate"
-          onPress={() => { }}
-          color="#00AEEF"
-        />
-        <Button
-          title="Volunteer"
-          onPress={() => { }}
-          color="#00AEEF"
-        />
-      </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  content: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  carouselContainer: {
+    width: '100%',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  imageContainer: {
+    width: '100%',
+    height: 280,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+    backgroundColor: '#f3f4f6',
+  },
+  raceImage: {
+    width: '100%',
+    height: '100%',
+  },
+  sponsorButton: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    width: '90%',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  sponsorButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '90%',
+    gap: 12,
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  actionButton: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flex: 1,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

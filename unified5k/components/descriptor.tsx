@@ -10,19 +10,19 @@ import { Ionicons } from '@expo/vector-icons';
 const Descriptor = ({ date, location, time }: { date: string; location: string; time: string }) => (
   <View style={styles.container}>
     <View style={styles.row}>
-      <Ionicons name="calendar" size={18} color="#00AEEF" />
-      <Text style={styles.label}> Date: </Text>
-      <Text>{date}</Text>
+      <Ionicons name="calendar" size={20} color="#4A90E2" />
+      <Text style={styles.label}>Date:</Text>
+      <Text style={styles.value}>{date}</Text>
     </View>
     <View style={styles.row}>
-      <Ionicons name="location" size={18} color="#00AEEF" />
-      <Text style={styles.label}> Location: </Text>
-      <Text>{location}</Text>
+      <Ionicons name="location" size={20} color="#4A90E2" />
+      <Text style={styles.label}>Location:</Text>
+      <Text style={styles.value}>{location}</Text>
     </View>
     <View style={styles.row}>
-      <Ionicons name="time" size={18} color="#00AEEF" />
-      <Text style={styles.label}> Time: </Text>
-      <Text>{time}</Text>
+      <Ionicons name="time" size={20} color="#4A90E2" />
+      <Text style={styles.label}>Time:</Text>
+      <Text style={styles.value}>{time}</Text>
     </View>
   </View>
 );
@@ -31,21 +31,29 @@ export default Descriptor;
 
 const styles = StyleSheet.create({
   container: {
-    borderWidth: 1,
-    borderColor: '#00AEEF',
-    borderRadius: 8,
-    padding: 12,
-    margin: 16,
-    backgroundColor: '#fff',
+    borderWidth: 3,
+    borderColor: '#4A90E2',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    backgroundColor: '#E8F4FC',
+    width: '90%',
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   label: {
-    fontWeight: 'bold',
-    marginLeft: 6,
+    fontWeight: '600',
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#000',
+  },
+  value: {
+    marginLeft: 4,
+    fontSize: 16,
+    color: '#333',
   },
 });

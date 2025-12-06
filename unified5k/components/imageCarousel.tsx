@@ -27,57 +27,74 @@ import { useState, useEffect } from 'react';
  */
 export default function ImageCarousel({imageResponse}: {imageResponse: string[]}) {
 
-    const [index, setIndex] = useState(0); // on change of index, a different image will appear 
+    const [index, setIndex] = useState(0); // on change of index, a different image will appear
 
 
     return (
         <View
             style={{ // the UI is currently only intended for vertical phones, change as needed in future
                 position: 'relative',
-                height: 200,
+                height: 280,
                 width: '100%',
                 justifyContent: "center",
                 alignItems: "center",
+                backgroundColor: '#000',
+                borderRadius: 12,
+                overflow: 'hidden',
             }}
         >
 
             <Image // content image
                 source={imageResponse[index]}
                 style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
             />
 
             <View style={{
                 flexDirection: 'row',
-                gap: 5,
+                gap: 10,
                 position: 'absolute',
-                bottom: 10
+                bottom: 16,
+                alignItems: 'center',
             }}>
-                <Pressable // Left button to return to previous image 
+                <Pressable // Left button to return to previous image
                     onPress={() => setIndex(((index - 1) + imageResponse.length) % imageResponse.length)}
                     style={{
-                        borderRadius: 10,
-                        backgroundColor: 'rgba(255, 255, 255, 0.5)'
+                        borderRadius: 25,
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        width: 40,
+                        height: 40,
+                        justifyContent: 'center',
+                        alignItems: 'center',
                     }}
                 >
-                    <Text style={{ fontSize: 20 }}> {" < "} </Text>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>{"<"}</Text>
                 </Pressable>
 
-                <Text style={{ // button to display status of selection
-                    fontSize: 20,
-                    borderRadius: 10,
-                    backgroundColor: 'rgba(255, 255, 255, 0.5)'
+                <View style={{ // button to display status of selection
+                    paddingHorizontal: 20,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)'
                 }}>
-                    {"     " + (index) + "/" + (imageResponse.length - 1) + "    "} </Text>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#333' }}>
+                        {index}/{imageResponse.length - 1}
+                    </Text>
+                </View>
 
 
-                <Pressable // Right button to progress to next image 
+                <Pressable // Right button to progress to next image
                     onPress={() => setIndex((index + 1) % imageResponse.length)}
                     style={{
-                        borderRadius: 10,
-                        backgroundColor: 'rgba(255, 255, 255, 0.5)'
+                        borderRadius: 25,
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        width: 40,
+                        height: 40,
+                        justifyContent: 'center',
+                        alignItems: 'center',
                     }}
                 >
-                    <Text style={{ fontSize: 20 }}> {" > "} </Text>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>{">"}</Text>
                 </Pressable>
 
 

@@ -1,5 +1,5 @@
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { Tabs, useRouter, useSegments } from "expo-router";
+import { Tabs, useRouter, useSegments, usePathname } from "expo-router";
 import { PaperProvider } from "react-native-paper";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { useEffect, useRef } from "react";
@@ -30,6 +30,7 @@ function RootLayoutNav() {
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const pathname = usePathname();
   const hasNavigated = useRef(false);
 
   useEffect(() => {
@@ -56,36 +57,47 @@ function RootLayoutNav() {
 
   return (
     <Tabs
-      screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#009EE2",
-        tabBarInactiveTintColor: "gray",
-        tabBarStyle: {
-          backgroundColor: "#fff",
-          borderTopColor: "#eee",
-          height: 70,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          marginBottom: 4,
-        },
-        tabBarIcon: ({ color, size }) => {
-          switch (route.name) {
-            case "media":
-              return <FontAwesome5 name="globe" size={size} color={color} />;
-            case "resources":
-              return <MaterialIcons name="folder" size={size} color={color} />;
-            case "index":
-              return <Ionicons name="home-outline" size={size} color={color} />;
-            case "donation":
-              return <Ionicons name="heart-outline" size={size} color={color} />;
-            case "profile":
-              return <Ionicons name="person-outline" size={size} color={color} />;
-            default:
-              return null;
-          }
-        },
-        headerShown: false,
-      })}
+      screenOptions={({ route }) => {
+        // Check if we're on race_details page to highlight Home tab
+        const isOnRaceDetails = pathname?.includes('race_details');
+
+        return {
+          tabBarActiveTintColor: "#009EE2",
+          tabBarInactiveTintColor: "gray",
+          tabBarStyle: {
+            backgroundColor: "#fff",
+            borderTopColor: "#eee",
+            height: 70,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            marginBottom: 4,
+            color: (route.name === "index" && isOnRaceDetails) ? "#009EE2" : undefined,
+          },
+          tabBarIcon: ({ color, size, focused }) => {
+            // Override color for Home icon when on race_details
+            const iconColor = (route.name === "index" && isOnRaceDetails)
+              ? "#009EE2"
+              : color;
+
+            switch (route.name) {
+              case "media":
+                return <FontAwesome5 name="globe" size={size} color={color} />;
+              case "resources":
+                return <MaterialIcons name="folder" size={size} color={color} />;
+              case "index":
+                return <Ionicons name="home-outline" size={size} color={iconColor} />;
+              case "donation":
+                return <Ionicons name="heart-outline" size={size} color={color} />;
+              case "profile":
+                return <Ionicons name="person-outline" size={size} color={color} />;
+              default:
+                return null;
+            }
+          },
+          headerShown: false,
+        };
+      }}
     >
       {/* Main tabs */}
       <Tabs.Screen name="media" options={{ title: "Media" }} />

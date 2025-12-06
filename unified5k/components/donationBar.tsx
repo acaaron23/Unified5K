@@ -1,20 +1,6 @@
-/**
- * Josh Ilano
- * Boston University
- * 7-16-2025
- */
-
-
-import { Button, Text, View } from "react-native";
-import { useState, useEffect } from 'react';
+import { Text, View, TouchableOpacity } from "react-native";
 import {useFonts} from 'expo-font';
 
-/**
- * 
- * @param currentAmount and totalAmount
- * 
- * @returns Donation Bar UI Element
- */
 export default function DonationBar({currentAmount, totalAmount}: {currentAmount: number, totalAmount: number}) {
 
     const [fontsLoaded] = useFonts({
@@ -28,49 +14,65 @@ export default function DonationBar({currentAmount, totalAmount}: {currentAmount
         return (
 
             <View
-                style={{ // the UI is currently only intended for vertical phones, change as needed in future
-                    position: 'relative',
-                    height: 125,
-                    borderRadius: 15,
+                style={{ 
+                    height: 140,
+                    borderRadius: 16,
                     borderWidth: 3,
-                    width: '80%',
+                    borderColor: '#4A90E2',
+                    width: '90%',
                     justifyContent: "center",
                     alignItems: "center",
-
+                    padding: 16,
+                    backgroundColor: '#fff',
                 }}
             >
 
                 <View
                     style={{
                         flexDirection: 'row',
-                        gap: 5
+                        width: '100%',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 12,
                     }}>
 
-                    <Text style={{ width: '50%', fontFamily: 'Poppins' }} >
-                        {"$" + currentAmount + " out of $" + totalAmount + " goal reached"}
+                    <Text style={{ fontFamily: 'Poppins', fontSize: 15, flex: 1, color: '#000' }} >
+                        {"$" + currentAmount.toLocaleString() + " out of $" + totalAmount.toLocaleString() + "\ngoal reached"}
                     </Text>
 
-                    <Button // change in future to use Pressable if needed... not much customization options
-                        title="Donate"
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: '#4A90E2',
+                            paddingHorizontal: 20,
+                            paddingVertical: 10,
+                            borderRadius: 8,
+                        }}
                         onPress={() => {}} // lambda function such that it will go to donate page
-                    />
+                    >
+                        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Donate</Text>
+                    </TouchableOpacity>
                 </View>
 
 
 
 
-                <View  // the background 
+                <View  // the background
                     style={{
-                        width: '90%', height: 20,
-                        borderWidth: 3,
-                        borderRadius: 15
+                        width: '100%',
+                        height: 28,
+                        borderWidth: 2,
+                        borderColor: '#4A90E2',
+                        borderRadius: 14,
+                        backgroundColor: '#E8F4FC',
+                        overflow: 'hidden',
                     }}>
 
                     <View  // the progress bar itself
                         style={{
-                            width: `${(currentAmount / totalAmount) * 100}%`, height: '100%',
-                            backgroundColor: 'rgba(107, 167, 197, 1)',
-                            borderRadius: 15,
+                            width: `${(currentAmount / totalAmount) * 100}%`,
+                            height: '100%',
+                            backgroundColor: '#6BA7C5',
+                            borderRadius: 12,
                             position: 'absolute'
                         }}>
                     </View>
