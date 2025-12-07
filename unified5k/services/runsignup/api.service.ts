@@ -76,14 +76,18 @@ class RunSignUpApiService {
         config.params.format = 'json';
 
         // Determine which authentication to use based on endpoint
-        const isUserEndpoint = config.url?.includes('/user') ||
-                               config.url?.includes('/registration') ||
-                               config.url?.includes('/participant');
-
+        const isUserEndpoint = config.url?.includes('/user');
+        const isRegistrationEndpoint = config.url?.includes('/registration') ||
+                                       config.url?.includes('/participant');
         const isPhotoEndpoint = config.url?.includes('/photos');
 
-        // Use OAuth token for user-specific endpoints, API key for public data
-        if (isUserEndpoint && this.accessToken) {
+        // Registration endpoints need BOTH OAuth token AND API keys
+        if (isRegistrationEndpoint && this.accessToken && API_KEY && API_SECRET) {
+          config.headers.Authorization = `Bearer ${this.accessToken}`;
+          config.params.rsu_api_key = API_KEY;
+          config.headers['X-RSU-API-SECRET'] = API_SECRET;
+          console.log('Using OAuth Bearer token + API keys for registration endpoint');
+        } else if (isUserEndpoint && this.accessToken) {
           // User-specific endpoints: use OAuth Bearer token
           config.headers.Authorization = `Bearer ${this.accessToken}`;
           console.log('Using OAuth Bearer token for user endpoint');

@@ -1,7 +1,9 @@
 import { Text, View, TouchableOpacity } from "react-native";
 import {useFonts} from 'expo-font';
+import { useRouter } from 'expo-router';
 
 export default function DonationBar({currentAmount, totalAmount}: {currentAmount: number, totalAmount: number}) {
+    const router = useRouter();
 
     const [fontsLoaded] = useFonts({
         "Poppins": require('../assets/fonts/Poppins-Regular.ttf'),
@@ -47,7 +49,7 @@ export default function DonationBar({currentAmount, totalAmount}: {currentAmount
                             paddingVertical: 10,
                             borderRadius: 8,
                         }}
-                        onPress={() => {}} // lambda function such that it will go to donate page
+                        onPress={() => router.push('/donation')}
                     >
                         <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Donate</Text>
                     </TouchableOpacity>

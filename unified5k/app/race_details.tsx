@@ -1,23 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { Button, Image, View, ActivityIndicator, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { Button, Image, View, ActivityIndicator, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 
 import Descriptor from "@/components/descriptor";
 import DonationBar from "@/components/donationBar";
 import ImageCarousel from "@/components/imageCarousel";
 import Header from "@/components/Header";
 import { raceService, photoService, type Race, type RacePhoto } from "@/services/runsignup";
+import { useRunSignUp } from "@/hooks/useRunSignUp";
 
 import "./global.css";
 
 export default function RaceDetails() {
   const { raceId } = useLocalSearchParams<{ raceId: string }>();
   const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const { isLinked, runSignUpUser, registerForRace, isLoading: runSignUpLoading } = useRunSignUp();
+
   const [race, setRace] = useState<Race | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [registering, setRegistering] = useState(false);
 
   useEffect(() => {
     const fetchRaceDetails = async () => {
@@ -175,9 +183,195 @@ export default function RaceDetails() {
     return require('@/assets/images/raceimage1.jpg');
   };
 
+  // Handle Participate button press
+  const handleParticipate = async () => {
+    console.log('[RaceDetails] Participate button pressed');
+    console.log('[RaceDetails] Auth state check:', {
+      isSignedIn,
+      isLinked,
+      hasRunSignUpUser: !!runSignUpUser,
+      runSignUpLoading,
+    });
+
+    // Check if user is signed in
+    if (!isSignedIn) {
+      console.log('[RaceDetails] User not signed in');
+      Alert.alert(
+        'Sign In Required',
+        'You need to sign in to register for this race.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign In', onPress: () => router.push('/(auth)/sign-in') }
+        ]
+      );
+      return;
+    }
+
+    // Check if RunSignUp account is linked
+    if (!isLinked) {
+      console.log('[RaceDetails] RunSignUp account not linked. isLinked:', isLinked);
+      Alert.alert(
+        'Link RunSignUp Account',
+        'You need to link your RunSignUp account to register for races. Go to your profile to link your account.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Go to Profile', onPress: () => router.push('/profile') }
+        ]
+      );
+      return;
+    }
+
+    console.log('[RaceDetails] RunSignUp user data:', {
+      user: runSignUpUser,
+      hasFirstName: !!runSignUpUser?.first_name,
+      hasLastName: !!runSignUpUser?.last_name,
+      hasEmail: !!runSignUpUser?.email,
+    });
+
+    // Check if race has events
+    if (!race?.events || race.events.length === 0) {
+      console.log('[RaceDetails] No events available for race');
+      Alert.alert('No Events Available', 'This race has no events available for registration.');
+      return;
+    }
+
+    // For now, register for the first event (we can add event selection later)
+    const eventId = race.events[0].event_id;
+    console.log('[RaceDetails] Attempting registration:', {
+      raceId,
+      eventId,
+      raceName: race.name,
+    });
+
+    try {
+      setRegistering(true);
+
+      // Use RunSignUp user data if available, otherwise fallback to Clerk user data
+      const firstName = runSignUpUser?.first_name || user?.firstName || '';
+      const lastName = runSignUpUser?.last_name || user?.lastName || '';
+      const email = runSignUpUser?.email || user?.primaryEmailAddress?.emailAddress || '';
+
+      console.log('[RaceDetails] Using user data:', {
+        source: runSignUpUser ? 'RunSignUp' : 'Clerk',
+        firstName,
+        lastName,
+        email,
+      });
+
+      if (!firstName || !lastName || !email) {
+        Alert.alert(
+          'Missing Information',
+          'Your profile is missing required information (name or email). Please update your profile and try again.'
+        );
+        setRegistering(false);
+        return;
+      }
+
+      const registrationData = {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        dob: runSignUpUser?.dob || '1990-01-01',
+        gender: runSignUpUser?.gender || 'O',
+        event_id: eventId,
+      };
+
+      console.log('[RaceDetails] Registration data:', registrationData);
+
+      // Register for the race
+      await registerForRace(Number(raceId), eventId, registrationData);
+
+      console.log('[RaceDetails] Registration successful!');
+      Alert.alert(
+        'Registration Successful!',
+        'You have been registered for this race. Check your profile to view your registration.',
+        [
+          { text: 'View Profile', onPress: () => router.push('/profile') },
+          { text: 'OK' }
+        ]
+      );
+    } catch (error: any) {
+      console.error('[RaceDetails] Registration error:', error);
+      console.error('[RaceDetails] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+      Alert.alert(
+        'Registration Failed',
+        error.message || 'Failed to register for this race. Please try again.'
+      );
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  // Handle Volunteer button press
+  const handleVolunteer = async () => {
+    // Check if user is signed in
+    if (!isSignedIn) {
+      Alert.alert(
+        'Sign In Required',
+        'You need to sign in to volunteer for this race.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign In', onPress: () => router.push('/(auth)/sign-in') }
+        ]
+      );
+      return;
+    }
+
+    // Check if RunSignUp account is linked
+    if (!isLinked) {
+      Alert.alert(
+        'Link RunSignUp Account',
+        'You need to link your RunSignUp account to volunteer for races. Go to your profile to link your account.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Go to Profile', onPress: () => router.push('/profile') }
+        ]
+      );
+      return;
+    }
+
+    // Show volunteer signup info
+    Alert.alert(
+      'Volunteer Signup',
+      'Volunteer registration will open your email client to contact the race organizers. Would you like to continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Contact Organizers',
+          onPress: () => {
+            // TODO: Add email functionality to contact race organizers
+            // For now, show a message
+            Alert.alert(
+              'Coming Soon',
+              'Volunteer registration is coming soon! For now, please visit the race website or contact the organizers directly.'
+            );
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <Header />
+      <View style={{ position: 'relative' }}>
+        <Header />
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            right: 16,
+            top: 8,
+            padding: 8,
+            zIndex: 10,
+          }}
+          onPress={() => router.push('/')}
+        >
+          <Ionicons name="close" size={32} color="#000" />
+        </TouchableOpacity>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
@@ -211,7 +405,7 @@ export default function RaceDetails() {
 
           <TouchableOpacity
             style={styles.sponsorButton}
-            onPress={() => router.push('/sponsor-tiers')}
+            onPress={() => router.push(`/sponsor-tiers?returnTo=race&raceId=${raceId}`)}
           >
             <Text style={styles.sponsorButtonText}>Become a Sponsor/Vendor</Text>
           </TouchableOpacity>
@@ -224,15 +418,21 @@ export default function RaceDetails() {
       {/* Floating action buttons */}
       <View style={styles.floatingButtonsContainer}>
         <TouchableOpacity
-          style={styles.floatingButton}
-          onPress={() => { }}
+          style={[styles.floatingButton, (registering || runSignUpLoading) && styles.floatingButtonDisabled]}
+          onPress={handleParticipate}
+          disabled={registering || runSignUpLoading}
         >
-          <Text style={styles.floatingButtonText}>Participate</Text>
+          {registering ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.floatingButtonText}>Participate</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.floatingButton}
-          onPress={() => { }}
+          style={[styles.floatingButton, runSignUpLoading && styles.floatingButtonDisabled]}
+          onPress={handleVolunteer}
+          disabled={runSignUpLoading}
         >
           <Text style={styles.floatingButtonText}>Volunteer</Text>
         </TouchableOpacity>
@@ -312,6 +512,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
     alignItems: 'center',
+  },
+  floatingButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    opacity: 0.6,
   },
   floatingButtonText: {
     color: '#fff',

@@ -152,14 +152,27 @@ class RegistrationService {
     registrationData: RegistrationRequest
   ): Promise<RegistrationResponse> {
     try {
+      const formattedData = this.formatRegistrationData(registrationData);
+      console.log('[RegistrationService] Registering for race:', {
+        raceId,
+        formattedData,
+        endpoint: `/race/${raceId}/registration/add`,
+      });
+
       const response = await apiService.post<RegistrationResponse>(
         `/race/${raceId}/registration/add`,
-        this.formatRegistrationData(registrationData)
+        formattedData
       );
 
+      console.log('[RegistrationService] Registration response:', response);
       return response;
-    } catch (error) {
-      console.error('Register for race error:', error);
+    } catch (error: any) {
+      console.error('[RegistrationService] Register for race error:', error);
+      console.error('[RegistrationService] Error details:', {
+        message: error.message,
+        raceId,
+        registrationData,
+      });
       throw error;
     }
   }

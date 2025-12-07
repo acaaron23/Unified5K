@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
     Modal, View, Text, TextInput, Pressable,
@@ -66,7 +67,7 @@ export default function SponsorModal({
                     borderBottomRightRadius: value === 'vendor' ? 12 : 0,
                 }}
             >
-                <Text className={`font-semibold ${active ? 'text-white' : 'text-black'}`}>{label}</Text>
+                <Text className={`font-bold ${active ? 'text-white' : 'text-black'}`}>{label}</Text>
             </Pressable>
         );
     };
@@ -78,27 +79,44 @@ export default function SponsorModal({
 
     return (
         <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-            <TouchableWithoutFeedback onPress={onClose}>
-                <View className="flex-1 bg-black/40" />
-            </TouchableWithoutFeedback>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={{ flex: 1 }}
+            >
+                <TouchableWithoutFeedback onPress={onClose}>
+                    <View style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.4)'
+                    }} />
+                </TouchableWithoutFeedback>
 
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="absolute inset-0">
-                <View className="flex-1 items-center justify-center px-5">
-                    <View className="w-full rounded-2xl bg-sky-100 px-5 py-16">
-                        <Text className="text-center text-xl font-extrabold mb-4">{prettyTitle}</Text>
+                <View className="flex-1 items-center justify-center px-5" style={{ pointerEvents: 'box-none' }}>
+                    <View className="w-full rounded-2xl bg-sky-100 px-5 py-16" style={{ borderWidth: 2, borderColor: '#1BA8D8' }}>
+                        <Text className="text-center text-xl font-extrabold mb-4 text-black">{prettyTitle}</Text>
 
-                        <View className="rounded-xl bg-white border border-gray-200 mb-3">
-                            <TextInput placeholder="Name" value={name} onChangeText={setName} className="px-4 py-3 text-base" />
+                        <View className="rounded-xl bg-white mb-3" style={{ borderWidth: 2, borderColor: '#1BA8D8' }}>
+                            <TextInput
+                                placeholder="Name"
+                                value={name}
+                                onChangeText={setName}
+                                className="px-4 py-3 text-base font-semibold text-black"
+                                placeholderTextColor="#666"
+                            />
                         </View>
 
-                        <View className="rounded-xl bg-white border border-gray-200 mb-3">
+                        <View className="rounded-xl bg-white mb-3" style={{ borderWidth: 2, borderColor: '#1BA8D8' }}>
                             <TextInput
                                 placeholder="Email"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 value={email}
                                 onChangeText={setEmail}
-                                className="px-4 py-3 text-base"
+                                className="px-4 py-3 text-base font-semibold text-black"
+                                placeholderTextColor="#666"
                             />
                         </View>
 
@@ -109,14 +127,15 @@ export default function SponsorModal({
                             <SegBtn label="Vendor" value="vendor" />
                         </View>
 
-                        <View className="rounded-xl bg-white border border-gray-200" style={{ minHeight: 120 }}>
+                        <View className="rounded-xl bg-white" style={{ minHeight: 120, borderWidth: 2, borderColor: '#1BA8D8' }}>
                             <TextInput
                                 placeholder="Message"
                                 value={msg}
                                 onChangeText={setMsg}
                                 multiline
-                                className="px-4 py-3 text-base flex-1"
+                                className="px-4 py-3 text-base flex-1 font-semibold text-black"
                                 textAlignVertical="top"
+                                placeholderTextColor="#666"
                             />
                         </View>
 
@@ -129,7 +148,7 @@ export default function SponsorModal({
                         </Pressable>
 
                         <Pressable onPress={onClose} className="mt-2 items-center">
-                            <Text className="text-gray-600">Cancel</Text>
+                            <Text className="text-black font-bold">Cancel</Text>
                         </Pressable>
                     </View>
                 </View>

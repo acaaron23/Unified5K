@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { SafeAreaView, View, Text, ScrollView, Pressable, LayoutAnimation, Platform, UIManager, Linking, Image } from 'react-native';
+import { SafeAreaView, View, Text, ScrollView, Pressable, LayoutAnimation, Platform, UIManager, Linking, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import Header from '../components/Header';
 import SponsorModal from '../components/SponsorModal';
 
@@ -54,9 +55,21 @@ const DATA: Tier[] = [
 ];
 
 export default function SponsorTiers() {
+    const router = useRouter();
+    const { returnTo, raceId } = useLocalSearchParams<{ returnTo?: string; raceId?: string }>();
     const [openSet, setOpenSet] = useState<Set<number>>(new Set());
     const [modalOpen, setModalOpen] = useState(false);
     const [modalType, setModalType] = useState<'community' | 'corporate' | 'vendor'>('community');
+
+    const handleBack = () => {
+        if (returnTo === 'donation') {
+            router.push('/donation');
+        } else if (returnTo === 'race' && raceId) {
+            router.push(`/race_details?raceId=${raceId}`);
+        } else {
+            router.back();
+        }
+    };
 
     const openModal = (type: 'community' | 'corporate' | 'vendor') => {
         setModalType(type);
@@ -66,8 +79,8 @@ export default function SponsorTiers() {
     const toggle = (i: number) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setOpenSet(p => {
-            const n = new Set(p); 
-            n.has(i) ? n.delete(i) : n.add(i); 
+            const n = new Set(p);
+            n.has(i) ? n.delete(i) : n.add(i);
             return n;
         });
     };
@@ -76,8 +89,23 @@ export default function SponsorTiers() {
 
     return (
         <SafeAreaView className="flex-1 bg-white">
-            <Header />
-            <ScrollView contentContainerClassName="px-5 pb-12">
+            <View style={{ position: 'relative' }}>
+                <Header />
+                <TouchableOpacity
+                    style={{
+                        position: 'absolute',
+                        right: 16,
+                        top: 8,
+                        padding: 8,
+                        zIndex: 10,
+                    }}
+                    onPress={handleBack}
+                >
+                    <Ionicons name="close" size={32} color="#000" />
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView className="px-5" contentContainerStyle={{ paddingBottom: 48 }}>
                 <View className="mt-6 items-center">
                     <Text className="text-3xl font-extrabold leading-9 text-gray-900">Support</Text>
                 </View>

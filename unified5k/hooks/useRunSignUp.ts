@@ -80,7 +80,14 @@ export function useRunSignUp() {
       const metadata = user.unsafeMetadata as any;
       const runSignUpUserId = metadata?.runSignUpUserId;
 
+      console.log('[useRunSignUp] Checking link status:', {
+        hasUser: !!user,
+        metadata,
+        runSignUpUserId,
+      });
+
       if (runSignUpUserId) {
+        console.log('[useRunSignUp] User is linked, userId:', runSignUpUserId);
         setState(prev => ({
           ...prev,
           isLinked: true,
@@ -89,9 +96,11 @@ export function useRunSignUp() {
 
         // Fetch user info
         await fetchUserInfo(runSignUpUserId);
+      } else {
+        console.log('[useRunSignUp] User is not linked (no runSignUpUserId in metadata)');
       }
     } catch (error) {
-      console.error('Check link status error:', error);
+      console.error('[useRunSignUp] Check link status error:', error);
     }
   }, [user]);
 
@@ -333,27 +342,37 @@ export function useRunSignUp() {
     eventId: number,
     registrationData: any
   ) => {
-    if (!state.runSignUpUser) {
+    console.log('[useRunSignUp] registerForRace called:', {
+      raceId,
+      eventId,
+      isLinked: state.isLinked,
+      hasRunSignUpUser: !!state.runSignUpUser,
+      runSignUpUserId: state.runSignUpUserId,
+    });
+
+    if (!state.isLinked) {
+      console.error('[useRunSignUp] Registration failed: User not linked to RunSignUp');
       throw new Error('User not linked to RunSignUp');
     }
 
     setState(prev => ({ ...prev, isLoading: true }));
 
     try {
+      console.log('[useRunSignUp] Calling registration service with data:', registrationData);
+
       await registrationService.registerForRace(raceId, {
         ...registrationData,
         event_id: eventId,
-        first_name: state.runSignUpUser!.first_name,
-        last_name: state.runSignUpUser!.last_name,
-        email: state.runSignUpUser!.email,
       });
+
+      console.log('[useRunSignUp] Registration successful, refreshing registrations');
 
       // Refresh registrations
       await fetchRegistrations();
 
       setState(prev => ({ ...prev, isLoading: false }));
     } catch (error: any) {
-      console.error('Register for race error:', error);
+      console.error('[useRunSignUp] Register for race error:', error);
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -361,7 +380,7 @@ export function useRunSignUp() {
       }));
       throw error;
     }
-  }, [state.runSignUpUser, fetchRegistrations]);
+  }, [state.isLinked, state.runSignUpUser, state.runSignUpUserId, fetchRegistrations]);
 
   // Auto-check link status when user changes
   useEffect(() => {

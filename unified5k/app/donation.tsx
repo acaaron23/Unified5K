@@ -12,7 +12,7 @@ export default function Donation() {
     const buttons: { label: string; onPress: () => void; variant?: 'filled' | 'outline' }[] = [
         { label: 'Donate to AdaptX', onPress: () => open('https://www.adaptx.org/donate'), variant: 'outline' },
         { label: 'Donate through a DAF', onPress: () => open('https://www.adaptx.org/donate'), variant: 'outline' },
-        { label: 'Become a Sponsor/Vendor', onPress: () => router.push('/sponsor-tiers'), variant: 'filled' },
+        { label: 'Become a Sponsor/Vendor', onPress: () => router.push('/sponsor-tiers?returnTo=donation'), variant: 'filled' },
     ];
 
     return (

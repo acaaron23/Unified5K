@@ -41,51 +41,14 @@ export default function ProfileScreen() {
     const [adaptiveCategory, setAdaptiveCategory] = useState<string>('');
     const [tshirtSize, setTshirtSize] = useState<string>('');
 
-    // Mock race data for display
-    const mockUpcomingRaces = [
-        {
-            registration_id: 1001,
-            race_id: 1,
-            race_name: "Boston Marathon",
-            event_name: "Full Marathon",
-            race_date: "2025-04-21",
-            race_location: { city: "Boston", state: "MA" },
-            bib_num: "12345",
-            logo_url: require('../assets/images/raceimage1.jpg') as any,
-        },
-        {
-            registration_id: 1002,
-            race_id: 2,
-            race_name: "NYC Inclusive 5K",
-            event_name: "5K Run",
-            race_date: "2025-05-15",
-            race_location: { city: "New York", state: "NY" },
-            bib_num: "5678",
-            logo_url: require('../assets/images/raceimage2.jpg') as any,
-        },
-    ];
+    // Determine which registrations to display
+    const displayUpcomingRaces = isLinked && upcomingRegistrations.length > 0
+        ? upcomingRegistrations
+        : [];
 
-    const mockPastRaces = [
-        {
-            registration_id: 1003,
-            race_id: 3,
-            race_name: "Chicago Run for Unity",
-            event_name: "10K Run",
-            race_date: "2024-11-10",
-            race_location: { city: "Chicago", state: "IL" },
-            bib_num: "9012",
-            logo_url: require('../assets/images/raceimage3.jpg') as any,
-        },
-        {
-            registration_id: 1004,
-            race_id: 4,
-            race_name: "LA Marathon",
-            event_name: "Half Marathon",
-            race_date: "2024-10-16",
-            race_location: { city: "Los Angeles", state: "CA" },
-            logo_url: require('../assets/images/raceimage4.jpg') as any,
-        },
-    ];
+    const displayPastRaces = isLinked && pastRegistrations.length > 0
+        ? pastRegistrations
+        : [];
 
     const [notificationStates, setNotificationStates] = useState<{[key: number]: boolean}>({});
 
@@ -277,33 +240,53 @@ export default function ProfileScreen() {
                 {selectedTab === 'Participant' && (
                     <View style={{ paddingTop: 20 }}>
                         <CollapsibleSection title="Upcoming Events">
-                            {mockUpcomingRaces.map((reg) => (
-                                <RaceCard
-                                    key={reg.registration_id}
-                                    raceName={reg.race_name}
-                                    location={`${reg.race_location.city}, ${reg.race_location.state}`}
-                                    imageSource={reg.logo_url}
-                                    raceDate={formatDate(reg.race_date)}
-                                    isNotificationEnabled={notificationStates[reg.race_id] || false}
-                                    onPress={() => router.push(`/race_details?raceId=${reg.race_id}`)}
-                                    onNotificationPress={() => handleNotificationPress(reg.race_id)}
-                                />
-                            ))}
+                            {!isLinked ? (
+                                <Text style={styles.emptyText}>
+                                    Link your RunSignUp account to view your registrations
+                                </Text>
+                            ) : displayUpcomingRaces.length > 0 ? (
+                                displayUpcomingRaces.map((reg) => (
+                                    <RaceCard
+                                        key={reg.registration_id}
+                                        raceName={reg.race_name}
+                                        location={`${reg.race_location.city}, ${reg.race_location.state}`}
+                                        imageSource={reg.logo_url ? { uri: reg.logo_url } : require('../assets/images/raceimage1.jpg')}
+                                        raceDate={formatDate(reg.race_date)}
+                                        isNotificationEnabled={notificationStates[reg.race_id] || false}
+                                        onPress={() => router.push(`/race_details?raceId=${reg.race_id}`)}
+                                        onNotificationPress={() => handleNotificationPress(reg.race_id)}
+                                    />
+                                ))
+                            ) : (
+                                <Text style={styles.emptyText}>
+                                    No upcoming races. Register for a race to see it here!
+                                </Text>
+                            )}
                         </CollapsibleSection>
 
                         <CollapsibleSection title="Past Events">
-                            {mockPastRaces.map((reg) => (
-                                <RaceCard
-                                    key={reg.registration_id}
-                                    raceName={reg.race_name}
-                                    location={`${reg.race_location.city}, ${reg.race_location.state}`}
-                                    imageSource={reg.logo_url}
-                                    raceDate={formatDate(reg.race_date)}
-                                    isNotificationEnabled={notificationStates[reg.race_id] || false}
-                                    onPress={() => router.push(`/race_details?raceId=${reg.race_id}`)}
-                                    onNotificationPress={() => handleNotificationPress(reg.race_id)}
-                                />
-                            ))}
+                            {!isLinked ? (
+                                <Text style={styles.emptyText}>
+                                    Link your RunSignUp account to view your past events
+                                </Text>
+                            ) : displayPastRaces.length > 0 ? (
+                                displayPastRaces.map((reg) => (
+                                    <RaceCard
+                                        key={reg.registration_id}
+                                        raceName={reg.race_name}
+                                        location={`${reg.race_location.city}, ${reg.race_location.state}`}
+                                        imageSource={reg.logo_url ? { uri: reg.logo_url } : require('../assets/images/raceimage1.jpg')}
+                                        raceDate={formatDate(reg.race_date)}
+                                        isNotificationEnabled={notificationStates[reg.race_id] || false}
+                                        onPress={() => router.push(`/race_details?raceId=${reg.race_id}`)}
+                                        onNotificationPress={() => handleNotificationPress(reg.race_id)}
+                                    />
+                                ))
+                            ) : (
+                                <Text style={styles.emptyText}>
+                                    No past races yet
+                                </Text>
+                            )}
                         </CollapsibleSection>
                     </View>
                 )}
@@ -312,33 +295,15 @@ export default function ProfileScreen() {
                 {selectedTab === 'Volunteer' && (
                     <View style={{ paddingTop: 20 }}>
                         <CollapsibleSection title="Upcoming Events">
-                            {mockUpcomingRaces.map((reg) => (
-                                <RaceCard
-                                    key={reg.registration_id}
-                                    raceName={reg.race_name}
-                                    location={`${reg.race_location.city}, ${reg.race_location.state}`}
-                                    imageSource={reg.logo_url}
-                                    raceDate={formatDate(reg.race_date)}
-                                    isNotificationEnabled={notificationStates[reg.race_id] || false}
-                                    onPress={() => router.push(`/race_details?raceId=${reg.race_id}`)}
-                                    onNotificationPress={() => handleNotificationPress(reg.race_id)}
-                                />
-                            ))}
+                            <Text style={styles.emptyText}>
+                                Volunteer signups coming soon! For now, contact race organizers directly.
+                            </Text>
                         </CollapsibleSection>
 
                         <CollapsibleSection title="Past Events">
-                            {mockPastRaces.map((reg) => (
-                                <RaceCard
-                                    key={reg.registration_id}
-                                    raceName={reg.race_name}
-                                    location={`${reg.race_location.city}, ${reg.race_location.state}`}
-                                    imageSource={reg.logo_url}
-                                    raceDate={formatDate(reg.race_date)}
-                                    isNotificationEnabled={notificationStates[reg.race_id] || false}
-                                    onPress={() => router.push(`/race_details?raceId=${reg.race_id}`)}
-                                    onNotificationPress={() => handleNotificationPress(reg.race_id)}
-                                />
-                            ))}
+                            <Text style={styles.emptyText}>
+                                No volunteer history yet
+                            </Text>
                         </CollapsibleSection>
                     </View>
                 )}
