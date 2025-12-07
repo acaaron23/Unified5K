@@ -1,11 +1,14 @@
 import { useSignIn } from '@clerk/clerk-expo';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Alert, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Alert, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
 import { Ionicons } from '@expo/vector-icons';
+
+const { width, height } = Dimensions.get('window');
+const isSmallDevice = width < 380;
 
 export default function SignInScreen() {
     const { signIn, setActive, isLoaded } = useSignIn();
@@ -62,18 +65,18 @@ export default function SignInScreen() {
                 </View>
 
                 <Text
-                    variant="displayMedium"
                     style={{
                         textAlign: "center",
-                        marginBottom: 16,
+                        marginBottom: isSmallDevice ? 12 : 16,
                         fontWeight: "bold",
+                        fontSize: isSmallDevice ? 28 : 36,
                     }}
                 >
                     Login
                 </Text>
 
-                <View className="rounded-2xl border-2 border-[#1BA8D8] px-2 py-16 mx-4">
-                    <View style={{ gap: 32 }}>
+                <View className="rounded-2xl border-2 border-[#1BA8D8] px-2 mx-4" style={{ paddingVertical: isSmallDevice ? 32 : 64 }}>
+                    <View style={{ gap: isSmallDevice ? 20 : 32 }}>
                         <TextInput
                             placeholder="Email"
                             outlineColor="#1BA8D8"
@@ -111,7 +114,7 @@ export default function SignInScreen() {
                         Forgot Password?
                     </Link>
 
-                    <View style={{ marginTop: 24, gap: 32 }}>
+                    <View style={{ marginTop: isSmallDevice ? 16 : 24, gap: isSmallDevice ? 20 : 32 }}>
                         <Button
                             mode="contained"
                             buttonColor="#1BA8D8"
@@ -123,7 +126,7 @@ export default function SignInScreen() {
                             disabled={loading}
                         >
                             <Text
-                                variant="headlineSmall"
+                                variant={isSmallDevice ? "titleLarge" : "headlineSmall"}
                                 style={{
                                     color: "#ffffff",
                                     fontWeight: "700",
@@ -139,11 +142,12 @@ export default function SignInScreen() {
                                     mode="outlined"
                                     textColor="#000000"
                                     style={{
-                                        borderRadius: 8
+                                        borderRadius: 8,
+                                        borderColor: '#1BA8D8',
                                     }}
                                     disabled={loading}
                                 >
-                                    <Text variant="headlineSmall" style={{ fontWeight: "700" }}>
+                                    <Text variant={isSmallDevice ? "titleLarge" : "headlineSmall"} style={{ fontWeight: "700" }}>
                                         Create new account
                                     </Text>
                                 </Button>
@@ -154,12 +158,13 @@ export default function SignInScreen() {
                             mode="outlined"
                             textColor="#000000"
                             style={{
-                                borderRadius: 8
+                                borderRadius: 8,
+                                borderColor: '#1BA8D8',
                             }}
                             onPress={() => router.replace("/")}
                             disabled={loading}
                         >
-                            <Text variant="headlineSmall" style={{ fontWeight: "700" }}>
+                            <Text variant={isSmallDevice ? "titleLarge" : "headlineSmall"} style={{ fontWeight: "700" }}>
                                 Continue as guest
                             </Text>
                         </Button>

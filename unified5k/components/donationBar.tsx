@@ -14,11 +14,11 @@ export default function DonationBar({currentAmount, totalAmount}: {currentAmount
         return (
 
             <View
-                style={{ 
+                style={{
                     height: 140,
                     borderRadius: 16,
                     borderWidth: 3,
-                    borderColor: '#4A90E2',
+                    borderColor: '#1BA8D8',
                     width: '90%',
                     justifyContent: "center",
                     alignItems: "center",
@@ -42,7 +42,7 @@ export default function DonationBar({currentAmount, totalAmount}: {currentAmount
 
                     <TouchableOpacity
                         style={{
-                            backgroundColor: '#4A90E2',
+                            backgroundColor: '#1BA8D8',
                             paddingHorizontal: 20,
                             paddingVertical: 10,
                             borderRadius: 8,
@@ -61,7 +61,7 @@ export default function DonationBar({currentAmount, totalAmount}: {currentAmount
                         width: '100%',
                         height: 28,
                         borderWidth: 2,
-                        borderColor: '#4A90E2',
+                        borderColor: '#1BA8D8',
                         borderRadius: 14,
                         backgroundColor: '#E8F4FC',
                         overflow: 'hidden',

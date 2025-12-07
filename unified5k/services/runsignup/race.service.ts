@@ -48,6 +48,9 @@ export interface Race {
   contact_email?: string;
   contact_phone?: string;
   schedule_status?: 'live' | 'upcoming' | 'past';
+  fundraising_goal?: number;
+  fundraising_raised?: number;
+  fundraising_enabled?: boolean;
 }
 
 export interface RaceListResponse {

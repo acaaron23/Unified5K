@@ -1,6 +1,9 @@
-import { View, Text, TouchableOpacity, SafeAreaView, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Linking, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
+
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 380;
 
 export default function Donation() {
     const router = useRouter();
@@ -18,24 +21,37 @@ export default function Donation() {
             <Header />
 
             {/* Title */}
-            <View className="mt-6 px-6 items-center">
-                <Text className="text-center text-3xl font-extrabold leading-9 text-gray-900">
+            <View className="px-6 items-center" style={{ marginTop: isSmallDevice ? 16 : 24 }}>
+                <Text
+                    className="text-center font-extrabold text-gray-900"
+                    style={{
+                        fontSize: isSmallDevice ? 24 : 30,
+                        lineHeight: isSmallDevice ? 32 : 36,
+                    }}
+                >
                     Help Us Make{'\n'}Fitness Accessible
                 </Text>
             </View>
 
             {/* Buttons - centered vertically in remaining space */}
             <View className="flex-1 px-5">
-                <View className="mt-12 flex-1">
+                <View className="flex-1" style={{ marginTop: isSmallDevice ? 32 : 48 }}>
                     {buttons.map((btn) => (
                         <TouchableOpacity
                             key={btn.label}
                             activeOpacity={0.85}
                             onPress={btn.onPress}
-                            className={`w-full rounded-2xl py-4 px-5 border-2 shadow-sm mt-5
-                ${btn.variant === 'filled' ? 'bg-sky-100 border-sky-500' : 'bg-white border-sky-500'}`}
+                            className={`w-full rounded-2xl border-2 shadow-sm ${btn.variant === 'filled' ? 'bg-sky-100 border-sky-500' : 'bg-white border-sky-500'}`}
+                            style={{
+                                paddingVertical: isSmallDevice ? 14 : 16,
+                                paddingHorizontal: 20,
+                                marginTop: 20,
+                            }}
                         >
-                            <Text className="text-center text-base font-extrabold text-black">
+                            <Text
+                                className="text-center font-extrabold text-black"
+                                style={{ fontSize: isSmallDevice ? 16 : 18 }}
+                            >
                                 {btn.label}
                             </Text>
                         </TouchableOpacity>

@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput as RNTextInput,
+  Dimensions,
 } from "react-native";
 import { TextInput, Button, Text } from "react-native-paper";
 import { useSignUp } from "@clerk/clerk-expo";
@@ -12,6 +13,9 @@ import { Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/Header";
 import { Ionicons } from "@expo/vector-icons";
+
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 380;
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -101,18 +105,18 @@ export default function SignUpScreen() {
           </View>
 
           <Text
-            variant="displayMedium"
             style={{
               textAlign: "center",
-              marginBottom: 24,
+              marginBottom: isSmallDevice ? 16 : 24,
               marginTop: 16,
               fontWeight: "bold",
+              fontSize: isSmallDevice ? 28 : 36,
             }}
           >
             Verify Email
           </Text>
 
-          <View className="mx-4 border-2 border-[#1BA8D8] rounded-2xl px-4 py-16">
+          <View className="mx-4 border-2 border-[#1BA8D8] rounded-2xl px-4" style={{ paddingVertical: isSmallDevice ? 32 : 64 }}>
             <Text className="text-center text-gray-600 mb-4 text-sm">
               We sent a verification code to {emailAddress}
             </Text>
@@ -128,7 +132,7 @@ export default function SignUpScreen() {
               style={{ backgroundColor: "#fff" }}
             />
 
-            <View style={{ marginTop: 24, gap: 16 }}>
+            <View style={{ marginTop: isSmallDevice ? 16 : 24, gap: 16 }}>
               <Button
                 mode="contained"
                 onPress={onVerifyPress}
@@ -138,8 +142,8 @@ export default function SignUpScreen() {
                 style={{ borderRadius: 8 }}
               >
                 <Text
-                  variant="headlineSmall"
-                  style={{ color: "#fff" }}
+                  variant={isSmallDevice ? "titleLarge" : "headlineSmall"}
+                  style={{ color: "#fff", fontWeight: "700" }}
                 >
                   Verify Email
                 </Text>
@@ -173,19 +177,19 @@ export default function SignUpScreen() {
         </View>
 
         <Text
-          variant="displayMedium"
           style={{
             textAlign: "center",
-            marginBottom: 24,
+            marginBottom: isSmallDevice ? 16 : 24,
             marginTop: 16,
             fontWeight: "bold",
+            fontSize: isSmallDevice ? 28 : 36,
           }}
         >
           Create an account
         </Text>
 
-        <View className="mx-4 border-2 border-[#1BA8D8] rounded-2xl px-4 py-16">
-          <View style={{ gap: 32 }}>
+        <View className="mx-4 border-2 border-[#1BA8D8] rounded-2xl px-4" style={{ paddingVertical: isSmallDevice ? 32 : 64 }}>
+          <View style={{ gap: isSmallDevice ? 20 : 32 }}>
             <TextInput
               placeholder="First Name"
               value={firstName}
@@ -253,7 +257,7 @@ export default function SignUpScreen() {
             />
           </View>
 
-          <View style={{ marginTop: 24, gap: 16 }}>
+          <View style={{ marginTop: isSmallDevice ? 16 : 24, gap: 16 }}>
             <Button
               mode="contained"
               onPress={onSignUpPress}
@@ -262,7 +266,7 @@ export default function SignUpScreen() {
               buttonColor="#1BA8D8"
               style={{ borderRadius: 8 }}
             >
-              <Text variant="headlineSmall" style={{ color: "#fff" }}>
+              <Text variant={isSmallDevice ? "titleLarge" : "headlineSmall"} style={{ color: "#fff", fontWeight: "700" }}>
                 Register
               </Text>
             </Button>

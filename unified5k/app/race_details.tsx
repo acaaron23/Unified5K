@@ -36,6 +36,11 @@ export default function RaceDetails() {
         // Fetch race details
         const raceDetails = await raceService.getRaceDetails(raceIdNum, true);
         console.log(`[RaceDetails] Successfully loaded race: ${raceDetails.name}`);
+        console.log(`[RaceDetails] Fundraising data:`, {
+          enabled: raceDetails.fundraising_enabled,
+          goal: raceDetails.fundraising_goal,
+          raised: raceDetails.fundraising_raised,
+        });
         setRace(raceDetails);
 
         // Fetch race photos
@@ -196,7 +201,13 @@ export default function RaceDetails() {
             time={time}
           />
 
-          <DonationBar currentAmount={8000} totalAmount={10000} />
+          {/* Show donation bar only if fundraising data is available */}
+          {race.fundraising_enabled !== false && (
+            <DonationBar
+              currentAmount={race.fundraising_raised || 0}
+              totalAmount={race.fundraising_goal || 10000}
+            />
+          )}
 
           <TouchableOpacity
             style={styles.sponsorButton}
@@ -205,23 +216,27 @@ export default function RaceDetails() {
             <Text style={styles.sponsorButtonText}>Become a Sponsor/Vendor</Text>
           </TouchableOpacity>
 
-          <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => { }}
-            >
-              <Text style={styles.actionButtonText}>Participate</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => { }}
-            >
-              <Text style={styles.actionButtonText}>Volunteer</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Add spacing for floating buttons */}
+          <View style={{ height: 80 }} />
         </View>
       </ScrollView>
+
+      {/* Floating action buttons */}
+      <View style={styles.floatingButtonsContainer}>
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={() => { }}
+        >
+          <Text style={styles.floatingButtonText}>Participate</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={() => { }}
+        >
+          <Text style={styles.floatingButtonText}>Volunteer</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -257,7 +272,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   sponsorButton: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#DAF6FF',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -267,27 +282,38 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sponsorButtonText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
     fontWeight: '600',
   },
-  actionButtonsContainer: {
+  floatingButtonsContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '90%',
+    justifyContent: 'center',
     gap: 12,
-    marginTop: 8,
-    marginBottom: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
   },
-  actionButton: {
-    backgroundColor: '#4A90E2',
+  floatingButton: {
+    backgroundColor: '#1BA8D8',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
     flex: 1,
     alignItems: 'center',
   },
-  actionButtonText: {
+  floatingButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
