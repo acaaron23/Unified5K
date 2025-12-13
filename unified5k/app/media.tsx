@@ -1,6 +1,7 @@
 /**
- * Updated Media Screen with RunSignUp Photo Integration
- * Corrected import paths for your project structure
+ * MEDIA PAGE - Photos and news articles browser
+ * Shows race photos from RunSignUp API and mock news articles
+ * Tabbed interface with search and sort functionality
  */
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -17,12 +18,12 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons';
-import Header from '../components/Header';
-import { photoService, type RacePhoto } from '../services/runsignup';
-import { useRunSignUp } from '../hooks/useRunSignUp';
+import { Ionicons, Feather } from '@expo/vector-icons'; // Icons
+import Header from '../components/Header'; // App header
+import { photoService, type RacePhoto } from '../services/runsignup'; // Photo API
+import { useRunSignUp } from '../hooks/useRunSignUp'; // RunSignUp integration
 
-// ===== Types =====
+// Article data structure for news tab
 type Article = {
   id: string;
   title: string;
@@ -32,7 +33,7 @@ type Article = {
   date: string;
 };
 
-// Mock articles (keep these for the news tab)
+// Mock news articles for news tab display
 const MOCK_ARTICLES: Article[] = [
   {
     id: '1',
@@ -55,7 +56,7 @@ const MOCK_ARTICLES: Article[] = [
   },
 ];
 
-// ===== Sort Options =====
+// Available sort options for articles and photos
 const SORT_OPTIONS = [
   { key: 'recent', label: 'Most recent' },
   { key: 'oldest', label: 'Oldest' },
@@ -63,7 +64,7 @@ const SORT_OPTIONS = [
   { key: 'za', label: 'Title Z–A' },
 ] as const;
 
-// ===== Segmented Control =====
+// Tab selector component - Photos or News Articles
 function Segmented({
   value,
   onChange,
@@ -118,10 +119,10 @@ function Segmented({
   );
 }
 
-// ===== Sort Chip =====
+// Sort dropdown component with modal picker
 function SortChip({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const current = SORT_OPTIONS.find((o) => o.key === value)?.label ?? 'Sort by';
+  const [open, setOpen] = useState(false); // Modal visibility
+  const current = SORT_OPTIONS.find((o) => o.key === value)?.label ?? 'Sort by'; // Selected label
 
   return (
     <View style={{ alignSelf: 'flex-end' }}>
@@ -182,7 +183,7 @@ function SortChip({ value, onChange }: { value: string; onChange: (v: string) =>
   );
 }
 
-// ===== Article Card =====
+// Individual article display card for news tab
 function ArticleCard({ item }: { item: Article }) {
   return (
     <View style={{
@@ -222,7 +223,7 @@ function ArticleCard({ item }: { item: Article }) {
   );
 }
 
-// ===== Photo Card =====
+// Individual photo display card for photos tab
 function PhotoCard({ item }: { item: RacePhoto }) {
   return (
     <View style={{
@@ -276,7 +277,7 @@ function PhotoCard({ item }: { item: RacePhoto }) {
   );
 }
 
-// ===== Search Bar =====
+// Search input component with icon
 function SearchBarInline({
   value,
   onChange,
@@ -310,25 +311,22 @@ function SearchBarInline({
   );
 }
 
-// ===== Main Screen =====
+// Main media screen component
 export default function MediaNewsScreen() {
-  const [mode, setMode] = useState<'photos' | 'news'>('photos');
-  const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<string>('recent');
+  const [mode, setMode] = useState<'photos' | 'news'>('photos'); // Current tab
+  const [query, setQuery] = useState(''); // Search query
+  const [sort, setSort] = useState<string>('recent'); // Sort order
 
-  // Photo state
-  const [photos, setPhotos] = useState<RacePhoto[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  // Photo tab state
+  const [photos, setPhotos] = useState<RacePhoto[]>([]); // Fetched race photos
+  const [loading, setLoading] = useState(false); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error message
+  const [refreshing, setRefreshing] = useState(false); // Pull-to-refresh state
 
-  // Get user's race registrations
+  // Get user's race registrations from RunSignUp
   const { upcomingRegistrations, pastRegistrations, isLinked } = useRunSignUp();
 
-  /**
-   * Fetch photos from user's registered races
-   * Uses RunSignUp Photo API
-   */
+  // Fetch photos from recent races using RunSignUp API
   const fetchPhotos = async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
@@ -340,14 +338,14 @@ export default function MediaNewsScreen() {
     try {
       console.log('[Media] Fetching photos from all races...');
 
-      // Import race service to get races
+      // Import race service to get list of races
       const { raceService } = await import('../services/runsignup');
 
-      // Get recent races (both past and upcoming)
+      // Fetch both past and upcoming races to search for photos
       console.log('[Media] Fetching races...');
       const [pastRaces, upcomingRaces] = await Promise.all([
-        raceService.getPastRaces(50, 730), // Last 2 years, more races
-        raceService.getUpcomingRaces(50), // More upcoming races
+        raceService.getPastRaces(50, 730), // Past 2 years
+        raceService.getUpcomingRaces(50), // Upcoming races
       ]);
 
       console.log(`[Media] Found ${pastRaces.length} past races and ${upcomingRaces.length} upcoming races`);
@@ -427,22 +425,20 @@ export default function MediaNewsScreen() {
     }
   };
 
-  /**
-   * Handle pull-to-refresh
-   */
+  // Handle pull-to-refresh gesture
   const handleRefresh = async () => {
     console.log('[Media] User triggered refresh');
-    await fetchPhotos(true);
+    await fetchPhotos(true); // Refresh photos
   };
 
-  // Load photos when mode changes to photos
+  // Fetch photos when switching to photos tab
   useEffect(() => {
     if (mode === 'photos') {
       fetchPhotos();
     }
   }, [mode]);
 
-  // Filtered articles (existing logic)
+  // Filter and sort news articles based on query and sort order
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = MOCK_ARTICLES.filter(
@@ -463,7 +459,7 @@ export default function MediaNewsScreen() {
     }
   }, [query, sort]);
 
-  // Filtered photos
+  // Filter and sort race photos based on sort order
   const filteredPhotos = useMemo(() => {
     let list = [...photos];
 

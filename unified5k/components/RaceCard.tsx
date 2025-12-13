@@ -1,27 +1,32 @@
-import { Ionicons } from '@expo/vector-icons';
+/**
+ * Race Card Component - Individual race display card
+ * Shows race name, location, image, date, and notification toggle
+ */
+
+import { Ionicons } from '@expo/vector-icons'; // Icons
 import React from 'react';
 import { Dimensions, Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 interface RaceCardProps {
-  raceName?: string;
-  location?: string;
-  imageSource?: ImageSourcePropType | null;
-  raceDate?: string;
-  isNotificationEnabled?: boolean;
-  onPress?: () => void;
-  onNotificationPress?: () => void;
+  raceName?: string; // Race name/title
+  location?: string; // Race location
+  imageSource?: ImageSourcePropType | null; // Race image
+  raceDate?: string; // Race date
+  isNotificationEnabled?: boolean; // Notification bell state
+  onPress?: () => void; // Card press handler
+  onNotificationPress?: () => void; // Notification toggle handler
 }
 
-const RaceCard: React.FC<RaceCardProps> = ({ 
-  raceName = "Race Name", 
-  location = "Location", 
+const RaceCard: React.FC<RaceCardProps> = ({
+  raceName = "Race Name",
+  location = "Location",
   imageSource = null,
   raceDate = null,
   isNotificationEnabled = false,
   onPress,
-  onNotificationPress 
+  onNotificationPress
 }) => {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>

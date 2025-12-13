@@ -47,6 +47,8 @@ export interface UserRegistration {
     city: string;
     state: string;
   };
+  logo_url?: string | null;
+  banner_url?: string | null;
 }
 
 export interface RegistrationListResponse {
@@ -90,13 +92,14 @@ class UserService {
   ): Promise<RegistrationListResponse> {
     try {
       const params: Record<string, any> = {
+        user_id: userId, // RunSignUp expects user_id as a parameter
         page: options?.page || 1,
         results_per_page: options?.resultsPerPage || 25,
       };
 
       // Filter by date if specified
       const now = new Date().toISOString().split('T')[0];
-      
+
       if (options?.includeUpcoming === true && options?.includePast === false) {
         params.start_date = now;
       } else if (options?.includePast === true && options?.includeUpcoming === false) {
@@ -104,7 +107,7 @@ class UserService {
       }
 
       const response = await apiService.get<RegistrationListResponse>(
-        `/user/${userId}/registrations`,
+        '/registrations',
         params
       );
 

@@ -1,3 +1,8 @@
+/**
+ * Hero Section Component - Home page banner with mission statement
+ * Displays Unified5K branding and tagline over background image
+ */
+
 import React from 'react';
 import { Dimensions, ImageBackground, StyleSheet, Text, View, } from 'react-native';
 

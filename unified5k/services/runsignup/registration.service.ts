@@ -156,11 +156,11 @@ class RegistrationService {
       console.log('[RegistrationService] Registering for race:', {
         raceId,
         formattedData,
-        endpoint: `/race/${raceId}/registration/add`,
+        endpoint: `/race/${raceId}/participants`,
       });
 
       const response = await apiService.post<RegistrationResponse>(
-        `/race/${raceId}/registration/add`,
+        `/race/${raceId}/participants`,
         formattedData
       );
 

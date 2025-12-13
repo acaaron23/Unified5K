@@ -1,23 +1,31 @@
+/**
+ * COLLAPSIBLE SECTION - Expandable content container
+ * Used in profile page to show/hide race registrations
+ * Toggles between open and closed states with animated chevron
+ */
+
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons'; // Icons
 
+// Component props
 interface Props {
-  title: string;
-  children?: React.ReactNode;
+  title: string; // Section header text
+  children?: React.ReactNode; // Content to display when expanded
 }
 
 const CollapsibleSection: React.FC<Props> = ({ title, children }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // Track expand/collapse state
 
   return (
     <View style={styles.wrapper}>
-      {/* Header Box */}
+      {/* Clickable header to toggle section */}
       <TouchableOpacity
         style={[styles.headerBox, isOpen ? styles.openHeader : styles.closedHeader]}
-        onPress={() => setIsOpen(!isOpen)}
+        onPress={() => setIsOpen(!isOpen)} // Toggle open/closed
       >
         <Text style={styles.title}>{title}</Text>
+        {/* Chevron icon changes based on state */}
         <Ionicons
           name={isOpen ? 'chevron-up' : 'chevron-down'}
           size={18}
@@ -25,7 +33,7 @@ const CollapsibleSection: React.FC<Props> = ({ title, children }) => {
         />
       </TouchableOpacity>
 
-      {/* Content below box */}
+      {/* Show content only when expanded */}
       {isOpen && <View style={styles.content}>{children}</View>}
     </View>
   );

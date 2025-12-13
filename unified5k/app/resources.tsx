@@ -1,3 +1,9 @@
+/**
+ * RESOURCES PAGE - Training plans and blog posts
+ * Shows fitness resources for runners
+ * Tabbed interface with training plans and blog articles
+ */
+
 import React, { useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -11,10 +17,10 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons';
-import Header from '@/components/Header';
+import { Ionicons, Feather } from '@expo/vector-icons'; // Icons
+import Header from '@/components/Header'; // App header
 
-// ---------- Types ----------
+// Blog post data structure
 type Blog = {
   id: string;
   title: string;
@@ -22,6 +28,7 @@ type Blog = {
   date?: string;
 };
 
+// Training plan data structure
 type TrainingPlan = {
   id: string;
   title: string;
@@ -29,6 +36,7 @@ type TrainingPlan = {
   imageUrl: string;
 };
 
+// Mock blog posts for display
 const BLOGS: Blog[] = [
   {
     id: 'b1',
@@ -88,6 +96,7 @@ const BLOGS: Blog[] = [
   },
 ];
 
+// Mock training plans for display
 const TRAINING_PLANS: TrainingPlan[] = [
   {
     id: 't1',
@@ -126,6 +135,7 @@ const TRAINING_PLANS: TrainingPlan[] = [
   },
 ];
 
+// Available sort options
 const SORT_OPTS = [
   { key: 'recent', label: 'Most recent' },
   { key: 'oldest', label: 'Oldest' },
@@ -133,11 +143,11 @@ const SORT_OPTS = [
   { key: 'za', label: 'Title Z–A' },
 ] as const;
 
-// ---------- Segmented Control ----------
-function SegmentedResources({ 
-  active, 
-  onChange 
-}: { 
+// Tab selector component - Training Plans or Blog Posts
+function SegmentedResources({
+  active,
+  onChange
+}: {
   active: 'training' | 'blogs';
   onChange: (tab: 'training' | 'blogs') => void;
 }) {
@@ -188,7 +198,7 @@ function SegmentedResources({
   );
 }
 
-// ---------- Search Bar ----------
+// Search input component
 function SearchBarInline({
   value,
   onChange,
@@ -222,7 +232,7 @@ function SearchBarInline({
   );
 }
 
-// ---------- Sort Chip ----------
+// Sort dropdown with modal picker
 function SortChip({
   value,
   onChange,
@@ -291,7 +301,7 @@ function SortChip({
   );
 }
 
-// ---------- Blog Row ----------
+// Individual blog post card
 function BlogRow({ item }: { item: Blog }) {
   return (
     <View style={{
@@ -328,7 +338,7 @@ function BlogRow({ item }: { item: Blog }) {
   );
 }
 
-// ---------- Training Plan Row ----------
+// Individual training plan card
 function TrainingPlanRow({ item }: { item: TrainingPlan }) {
   return (
     <View style={{
@@ -359,19 +369,21 @@ function TrainingPlanRow({ item }: { item: TrainingPlan }) {
   );
 }
 
-// ---------- Main Screen ----------
+// Main resources screen component
 export default function ResourcesScreen() {
-  const [activeTab, setActiveTab] = useState<'training' | 'blogs'>('training');
-  const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<string>('recent');
-  const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'training' | 'blogs'>('training'); // Active tab
+  const [query, setQuery] = useState(''); // Search query
+  const [sort, setSort] = useState<string>('recent'); // Sort order
+  const [refreshing, setRefreshing] = useState(false); // Pull-to-refresh state
 
+  // Handle pull-to-refresh
   const handleRefresh = async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate refresh
     setRefreshing(false);
   };
 
+  // Filter and sort blog posts
   const blogList = useMemo(() => {
     const q = query.trim().toLowerCase();
     let data = BLOGS.filter((b) => !q || b.title.toLowerCase().includes(q));
@@ -385,6 +397,7 @@ export default function ResourcesScreen() {
     }
   }, [query, sort]);
 
+  // Filter and sort training plans
   const trainingList = useMemo(() => {
     const q = query.trim().toLowerCase();
     let data = TRAINING_PLANS.filter((t) => !q || t.title.toLowerCase().includes(q));

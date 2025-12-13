@@ -1,63 +1,67 @@
 /**
- * useRunSignUp Hook
- * Custom React hook for integrating RunSignUp with Clerk authentication
+ * useRunSignUp Hook - RunSignUp API integration
+ * Manages RunSignUp account linking with Clerk auth
+ * Handles user registrations, races, and race sign-ups
+ * Uses partner API keys for all requests
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-expo';
+import { useUser, useAuth } from '@clerk/clerk-expo'; // Clerk authentication
 import {
-  oauth2Service,
-  userService,
-  raceService,
-  registrationService,
-  photoService,
+  oauth2Service, // OAuth flow (currently limited)
+  userService, // User data and registrations
+  raceService, // Browse and search races
+  registrationService, // Sign up for races
+  photoService, // Race photos
   type RunSignUpUser,
   type UserRegistration,
   type Race,
 } from '../services/runsignup';
 
+// Hook state - what data is available
 export interface RunSignUpState {
   // Authentication state
-  isLinked: boolean;
-  isLoading: boolean;
-  error: string | null;
-  adminInfo: string | null; // Info message for admins only
+  isLinked: boolean; // Is Clerk account linked to RunSignUp
+  isLoading: boolean; // Loading data from API
+  error: string | null; // Last error message
+  adminInfo: string | null; // Debug info for admins
 
   // User data
-  runSignUpUser: RunSignUpUser | null;
-  runSignUpUserId: number | null;
+  runSignUpUser: RunSignUpUser | null; // Full user profile
+  runSignUpUserId: number | null; // RunSignUp user ID
 
   // Registrations
-  upcomingRegistrations: UserRegistration[];
-  pastRegistrations: UserRegistration[];
+  upcomingRegistrations: UserRegistration[]; // Future races user signed up for
+  pastRegistrations: UserRegistration[]; // Completed races
 
   // Races
-  nearbyRaces: Race[];
+  nearbyRaces: Race[]; // Races near user location
 }
 
+// Available actions from this hook
 export interface RunSignUpActions {
   // Authentication
-  linkAccount: () => Promise<void>;
-  unlinkAccount: () => Promise<void>;
-  refreshToken: () => Promise<void>;
+  linkAccount: () => Promise<void>; // Link to RunSignUp account
+  unlinkAccount: () => Promise<void>; // Unlink account
+  refreshToken: () => Promise<void>; // Refresh OAuth token
 
   // User data
-  fetchUserInfo: () => Promise<void>;
-  fetchRegistrations: () => Promise<void>;
+  fetchUserInfo: () => Promise<void>; // Get user profile
+  fetchRegistrations: () => Promise<void>; // Get user's race registrations
 
   // Races
-  fetchNearbyRaces: (zipcode?: string, radius?: number) => Promise<void>;
-  searchRaces: (query: string) => Promise<Race[]>;
+  fetchNearbyRaces: (zipcode?: string, radius?: number) => Promise<void>; // Find local races
+  searchRaces: (query: string) => Promise<Race[]>; // Search races by name
 
   // Registration
-  registerForRace: (raceId: number, eventId: number, data: any) => Promise<void>;
+  registerForRace: (raceId: number, eventId: number, data: any) => Promise<void>; // Sign up for race
 }
 
 export function useRunSignUp() {
-  const { user } = useUser();
-  const { isSignedIn } = useAuth();
+  const { user } = useUser(); // Clerk user
+  const { isSignedIn } = useAuth(); // Auth status
 
-  // State
+  // Initialize hook state
   const [state, setState] = useState<RunSignUpState>({
     isLinked: false,
     isLoading: false,

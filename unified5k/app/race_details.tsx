@@ -1,31 +1,38 @@
+/**
+ * RACE DETAILS PAGE - Individual race information
+ * Shows race details, photo carousel, and registration
+ * Fetches race info and photos from RunSignUp API
+ * Allows signed-in users to register for the race
+ */
+
 import React, { useEffect, useState } from "react";
 import { Button, Image, View, ActivityIndicator, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Modal } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router"; // Get raceId from URL
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo"; // Check auth status
 
-import Descriptor from "@/components/descriptor";
-import DonationBar from "@/components/donationBar";
-import ImageCarousel from "@/components/imageCarousel";
+import Descriptor from "@/components/descriptor"; // Date/location/time display
+import DonationBar from "@/components/donationBar"; // Fundraising progress
+import ImageCarousel from "@/components/imageCarousel"; // Race photos slideshow
 import Header from "@/components/Header";
-import { raceService, photoService, type Race, type RacePhoto } from "@/services/runsignup";
-import { useRunSignUp } from "@/hooks/useRunSignUp";
+import { raceService, photoService, type Race, type RacePhoto } from "@/services/runsignup"; // API
+import { useRunSignUp } from "@/hooks/useRunSignUp"; // RunSignUp integration
 
 import "./global.css";
 
 export default function RaceDetails() {
-  const { raceId } = useLocalSearchParams<{ raceId: string }>();
+  const { raceId } = useLocalSearchParams<{ raceId: string }>(); // Race ID from route
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth(); // Check if logged in
   const { user } = useUser();
   const { isLinked, runSignUpUser, registerForRace, isLoading: runSignUpLoading } = useRunSignUp();
 
-  const [race, setRace] = useState<Race | null>(null);
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [registering, setRegistering] = useState(false);
+  const [race, setRace] = useState<Race | null>(null); // Race data from API
+  const [photos, setPhotos] = useState<string[]>([]); // Race photo URLs
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error message
+  const [registering, setRegistering] = useState(false); // Registration in progress
 
   useEffect(() => {
     const fetchRaceDetails = async () => {

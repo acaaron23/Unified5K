@@ -1,12 +1,17 @@
-import { ExternalPathString, Link } from "expo-router"
+/**
+ * Blog Post Card Component - Displays blog post with title and image
+ */
+
+import { ExternalPathString, Link } from "expo-router" // Navigation
 import { Image, View } from "react-native"
-import { Text } from "react-native-paper"
+import { Text } from "react-native-paper" // Material UI
 
 export type BlogPostCardProps = {
-    url: string,
-    image: string,
-    title: string
+    url: string, // Blog post URL
+    image: string, // Blog image URL
+    title: string // Blog post title
 }
+
 export function BlogPostCard({ url, image, title }: BlogPostCardProps) {
     return <View style={{ alignSelf: "baseline", flexDirection: "column", gap: 8, backgroundColor: "transparent" }}>
         <Text variant="displaySmall" style={{ marginLeft: 8 }}>{title}</Text>

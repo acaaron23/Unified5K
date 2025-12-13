@@ -1,11 +1,16 @@
-import { ExternalPathString, Link } from "expo-router"
+/**
+ * Article Card Component - Displays news article with image and link
+ */
+
+import { ExternalPathString, Link } from "expo-router" // Navigation
 import { Image, View, ViewProps } from "react-native"
-import { Button, Text } from "react-native-paper"
+import { Button, Text } from "react-native-paper" // Material UI
+
 export type ArticleCardProps = ViewProps & {
-    title: string,
-    url: string,
-    image: string,
-    text?: string
+    title: string, // Article title
+    url: string, // Article URL
+    image: string, // Article image URL
+    text?: string // Article excerpt
 }
 
 export function ArticleCard({ title, url, image, text, style, ...rest }: ArticleCardProps) {

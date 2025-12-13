@@ -1,47 +1,53 @@
+/**
+ * PROFILE PAGE - User profile and race registrations
+ * Shows user info, RunSignUp account linking, and race history
+ * Displays upcoming and past races from RunSignUp API
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Dimensions, ActivityIndicator, Modal } from 'react-native';
-import CollapsibleSection from '../components/profile/CollapsibleSection';
-import Header from '../components/Header';
-import RaceCard from '../components/RaceCard';
-import * as ImagePicker from 'expo-image-picker';
-import { useAuth, useUser } from '@clerk/clerk-expo';
-import { useRouter, Link } from 'expo-router';
-import { Button } from 'react-native-paper';
+import CollapsibleSection from '../components/profile/CollapsibleSection'; // Expandable sections
+import Header from '../components/Header'; // App header
+import RaceCard from '../components/RaceCard'; // Race display cards
+import * as ImagePicker from 'expo-image-picker'; // Profile image picker
+import { useAuth, useUser } from '@clerk/clerk-expo'; // Clerk authentication
+import { useRouter, Link } from 'expo-router'; // Navigation
+import { Button } from 'react-native-paper'; // Material UI buttons
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRunSignUp } from '../hooks/useRunSignUp';
-import { Ionicons } from '@expo/vector-icons';
+import { useRunSignUp } from '../hooks/useRunSignUp'; // RunSignUp integration
+import { Ionicons } from '@expo/vector-icons'; // Icons
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function ProfileScreen() {
-    const { isSignedIn, signOut } = useAuth();
-    const { user } = useUser();
-    const router = useRouter();
+    const { isSignedIn, signOut } = useAuth(); // Clerk auth state
+    const { user } = useUser(); // Current user data
+    const router = useRouter(); // Navigation
 
-    // RunSignUp integration
+    // RunSignUp integration - race registrations and account linking
     const {
-        isLinked,
-        isLoading: runSignUpLoading,
-        runSignUpUser,
-        runSignUpUserId,
-        upcomingRegistrations,
-        pastRegistrations,
-        linkAccount,
-        unlinkAccount,
-        fetchRegistrations,
-        error: runSignUpError,
-        adminInfo,
+        isLinked, // Is RunSignUp account linked
+        isLoading: runSignUpLoading, // Loading state
+        runSignUpUser, // RunSignUp user data
+        runSignUpUserId, // RunSignUp user ID
+        upcomingRegistrations, // Future races
+        pastRegistrations, // Completed races
+        linkAccount, // Link RunSignUp account
+        unlinkAccount, // Unlink RunSignUp account
+        fetchRegistrations, // Refresh race registrations
+        error: runSignUpError, // Error message
+        adminInfo, // Admin debug info
     } = useRunSignUp();
 
-    // Check if user is admin (you can customize this logic)
+    // Check if user has admin role
     const isAdmin = user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.isAdmin === true;
 
-    const [selectedTab, setSelectedTab] = useState<'Participant' | 'Volunteer' | 'Organization'>('Participant');
-    const [imageUri, setImageUri] = useState<string | null>(null);
-    const [adaptiveCategory, setAdaptiveCategory] = useState<string>('');
-    const [tshirtSize, setTshirtSize] = useState<string>('');
+    const [selectedTab, setSelectedTab] = useState<'Participant' | 'Volunteer' | 'Organization'>('Participant'); // Active tab
+    const [imageUri, setImageUri] = useState<string | null>(null); // Profile image URI
+    const [adaptiveCategory, setAdaptiveCategory] = useState<string>(''); // Adaptive race category
+    const [tshirtSize, setTshirtSize] = useState<string>(''); // T-shirt size
 
-    // Determine which registrations to display
+    // Filter registrations based on link status
     const displayUpcomingRaces = isLinked && upcomingRegistrations.length > 0
         ? upcomingRegistrations
         : [];
@@ -50,15 +56,17 @@ export default function ProfileScreen() {
         ? pastRegistrations
         : [];
 
-    const [notificationStates, setNotificationStates] = useState<{[key: number]: boolean}>({});
+    const [notificationStates, setNotificationStates] = useState<{[key: number]: boolean}>({}); // Notification toggles
 
-    // Load registrations when linked (only if we have real user data)
+    // Fetch race registrations when RunSignUp account is linked
     useEffect(() => {
         if (isLinked && !runSignUpLoading && runSignUpUserId && runSignUpUserId > 1) {
             fetchRegistrations();
         }
-    }, [isLinked, runSignUpLoading, runSignUpUserId, fetchRegistrations]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLinked, runSignUpUserId]); // Only re-fetch when link status changes
 
+    // Toggle notification state for race
     const handleNotificationPress = (raceId: number): void => {
         setNotificationStates(prev => ({
             ...prev,
@@ -66,11 +74,17 @@ export default function ProfileScreen() {
         }));
     };
 
+    // Format race date to short format (e.g., "Jan 15")
     const formatDate = (dateString: string): string => {
+        if (!dateString) return 'TBA';
+
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'TBA';
+
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
+    // Open image picker to select profile photo
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permissionResult.granted) {
@@ -79,7 +93,7 @@ export default function ProfileScreen() {
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
@@ -90,7 +104,7 @@ export default function ProfileScreen() {
         }
     };
 
-    // If user is not signed in, show login prompt
+    // Show login screen if not signed in
     if (!isSignedIn) {
         return (
             <SafeAreaView style={styles.container} edges={['top']}>
@@ -134,7 +148,7 @@ export default function ProfileScreen() {
         );
     }
 
-    // User is signed in - show profile
+    // Main profile view for signed-in users
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <Header />
@@ -183,12 +197,6 @@ export default function ProfileScreen() {
                         <View style={styles.errorBanner}>
                             <Ionicons name="alert-circle" size={20} color="#DC2626" />
                             <Text style={styles.errorText}>{runSignUpError}</Text>
-                        </View>
-                    )}
-                    {isAdmin && adminInfo && (
-                        <View style={styles.infoBanner}>
-                            <Ionicons name="information-circle" size={20} color="#10b981" />
-                            <Text style={styles.infoText}>{adminInfo}</Text>
                         </View>
                     )}
                     {!isLinked ? (
@@ -249,9 +257,9 @@ export default function ProfileScreen() {
                                     <RaceCard
                                         key={reg.registration_id}
                                         raceName={reg.race_name}
-                                        location={`${reg.race_location.city}, ${reg.race_location.state}`}
+                                        location={reg.race_location ? `${reg.race_location.city}, ${reg.race_location.state}` : 'Location TBA'}
                                         imageSource={reg.logo_url ? { uri: reg.logo_url } : require('../assets/images/raceimage1.jpg')}
-                                        raceDate={formatDate(reg.race_date)}
+                                        raceDate={formatDate(reg.race_date || '')}
                                         isNotificationEnabled={notificationStates[reg.race_id] || false}
                                         onPress={() => router.push(`/race_details?raceId=${reg.race_id}`)}
                                         onNotificationPress={() => handleNotificationPress(reg.race_id)}
@@ -274,9 +282,9 @@ export default function ProfileScreen() {
                                     <RaceCard
                                         key={reg.registration_id}
                                         raceName={reg.race_name}
-                                        location={`${reg.race_location.city}, ${reg.race_location.state}`}
+                                        location={reg.race_location ? `${reg.race_location.city}, ${reg.race_location.state}` : 'Location TBA'}
                                         imageSource={reg.logo_url ? { uri: reg.logo_url } : require('../assets/images/raceimage1.jpg')}
-                                        raceDate={formatDate(reg.race_date)}
+                                        raceDate={formatDate(reg.race_date || '')}
                                         isNotificationEnabled={notificationStates[reg.race_id] || false}
                                         onPress={() => router.push(`/race_details?raceId=${reg.race_id}`)}
                                         onNotificationPress={() => handleNotificationPress(reg.race_id)}

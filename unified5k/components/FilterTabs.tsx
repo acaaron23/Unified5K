@@ -1,32 +1,39 @@
-import { Ionicons } from '@expo/vector-icons';
+/**
+ * Filter Tabs Component - Race filter and sort buttons
+ * Displays Live/Past/Upcoming race filters and sort options
+ */
+
+import { Ionicons } from '@expo/vector-icons'; // Icons
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
 
+// Filter state for race status
 interface ActiveFilters {
-  live: boolean;
-  past: boolean;
-  upcoming: boolean;
+  live: boolean; // Show live races
+  past: boolean; // Show past races
+  upcoming: boolean; // Show upcoming races
 }
 
 interface FilterTabsProps {
-  activeFilters: ActiveFilters;
-  onFilterChange: (filters: ActiveFilters) => void;
+  activeFilters: ActiveFilters; // Current filter state
+  onFilterChange: (filters: ActiveFilters) => void; // Filter change handler
 }
 
 interface FilterButtonProps {
-  title: string;
-  filterKey: keyof ActiveFilters;
-  icon?: string;
-  isActive: boolean;
-  onPress: () => void;
+  title: string; // Button label
+  filterKey: keyof ActiveFilters; // Filter key to toggle
+  icon?: string; // Icon name
+  isActive: boolean; // Active state
+  onPress: () => void; // Press handler
 }
 
 interface SortButtonProps {
-  title: string;
-  icon: string;
+  title: string; // Button label
+  icon: string; // Icon name
 }
 
 const FilterTabs: React.FC<FilterTabsProps> = ({ activeFilters, onFilterChange }) => {
+  // Toggle filter on/off
   const toggleFilter = (filterKey: keyof ActiveFilters): void => {
     const newFilters: ActiveFilters = {
       ...activeFilters,

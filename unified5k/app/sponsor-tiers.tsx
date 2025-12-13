@@ -1,17 +1,24 @@
+/**
+ * SPONSOR TIERS PAGE - Sponsorship and vendor options
+ * Shows different sponsorship levels with expandable details
+ * Allows users to contact organizers about sponsorship
+ */
+
 import React, { useState } from 'react';
 import { SafeAreaView, View, Text, ScrollView, Pressable, LayoutAnimation, Platform, UIManager, Linking, Image, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import Header from '../components/Header';
-import SponsorModal from '../components/SponsorModal';
+import { Ionicons } from '@expo/vector-icons'; // Icons
+import { useRouter, useLocalSearchParams } from 'expo-router'; // Navigation
+import Header from '../components/Header'; // App header
+import SponsorModal from '../components/SponsorModal'; // Contact form modal
 
-// Only enable on old architecture Android. It's a no-op (and warns) on Fabric.
+// Enable layout animations on Android (old architecture only)
 const isFabric = (global as any)?.nativeFabricUIManager != null;
 
 if (Platform.OS === 'android' && !isFabric && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+// Sponsorship tier data structure
 type Tier = {
     title: string;
     summary?: string;
@@ -22,6 +29,7 @@ type Tier = {
 
 const corporateImg = require('../assets/images/corporate-sponsor-option-image.jpg');
 
+// Available sponsorship tiers and vendor options
 const DATA: Tier[] = [
     {
         title: 'Community Sponsors',
@@ -55,12 +63,13 @@ const DATA: Tier[] = [
 ];
 
 export default function SponsorTiers() {
-    const router = useRouter();
-    const { returnTo, raceId } = useLocalSearchParams<{ returnTo?: string; raceId?: string }>();
-    const [openSet, setOpenSet] = useState<Set<number>>(new Set());
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalType, setModalType] = useState<'community' | 'corporate' | 'vendor'>('community');
+    const router = useRouter(); // Navigation
+    const { returnTo, raceId } = useLocalSearchParams<{ returnTo?: string; raceId?: string }>(); // Route params
+    const [openSet, setOpenSet] = useState<Set<number>>(new Set()); // Expanded sections
+    const [modalOpen, setModalOpen] = useState(false); // Contact modal visibility
+    const [modalType, setModalType] = useState<'community' | 'corporate' | 'vendor'>('community'); // Modal type
 
+    // Handle back button navigation based on return route
     const handleBack = () => {
         if (returnTo === 'donation') {
             router.push('/donation');
@@ -71,11 +80,13 @@ export default function SponsorTiers() {
         }
     };
 
+    // Open contact modal for specific sponsor type
     const openModal = (type: 'community' | 'corporate' | 'vendor') => {
         setModalType(type);
         setModalOpen(true);
     };
 
+    // Toggle section expansion with animation
     const toggle = (i: number) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setOpenSet(p => {
@@ -85,6 +96,7 @@ export default function SponsorTiers() {
         });
     };
 
+    // Open external URL in browser
     const openUrl = (url: string) => Linking.openURL(url).catch(() => { });
 
     return (

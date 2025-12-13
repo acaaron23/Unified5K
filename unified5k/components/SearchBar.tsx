@@ -1,17 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
+/**
+ * Search Bar Component - Search input with icon
+ * Text input field for searching races
+ */
+
+import { Ionicons } from '@expo/vector-icons'; // Icons
 import React from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, View, } from 'react-native';
 
 interface SearchBarProps {
-  value: string;
-  onSearch: (query: string) => void;
-  placeholder?: string;
+  value: string; // Current search value
+  onSearch: (query: string) => void; // Search handler
+  placeholder?: string; // Placeholder text
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ 
-  value, 
-  onSearch, 
-  placeholder = "Search..." 
+const SearchBar: React.FC<SearchBarProps> = ({
+  value,
+  onSearch,
+  placeholder = "Search..."
 }) => {
   return (
     <View style={styles.container}>

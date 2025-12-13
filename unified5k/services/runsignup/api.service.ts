@@ -75,34 +75,15 @@ class RunSignUpApiService {
 
         config.params.format = 'json';
 
-        // Determine which authentication to use based on endpoint
-        const isUserEndpoint = config.url?.includes('/user');
-        const isRegistrationEndpoint = config.url?.includes('/registration') ||
-                                       config.url?.includes('/participant');
-        const isPhotoEndpoint = config.url?.includes('/photos');
-
-        // Registration endpoints need BOTH OAuth token AND API keys
-        if (isRegistrationEndpoint && this.accessToken && API_KEY && API_SECRET) {
-          config.headers.Authorization = `Bearer ${this.accessToken}`;
+        // IMPORTANT: Partner API keys have full access to everything
+        // Only use OAuth token if we DON'T have partner keys
+        if (API_KEY && API_SECRET) {
+          // Use partner API keys for ALL endpoints
           config.params.rsu_api_key = API_KEY;
           config.headers['X-RSU-API-SECRET'] = API_SECRET;
-          console.log('Using OAuth Bearer token + API keys for registration endpoint');
-        } else if (isUserEndpoint && this.accessToken) {
-          // User-specific endpoints: use OAuth Bearer token
-          config.headers.Authorization = `Bearer ${this.accessToken}`;
-          console.log('Using OAuth Bearer token for user endpoint');
-        } else if (isPhotoEndpoint && API_KEY && API_SECRET) {
-          // Photo endpoints: use ONLY partner API key (no OAuth)
-          config.params.rsu_api_key = API_KEY;
-          config.headers['X-RSU-API-SECRET'] = API_SECRET;
-          console.log('Using partner API key for photo endpoint (no OAuth)');
-        } else if (API_KEY && API_SECRET) {
-          // Public endpoints (races, events): use API key
-          config.params.rsu_api_key = API_KEY;
-          config.headers['X-RSU-API-SECRET'] = API_SECRET;
-          console.log('Using API key for public endpoint');
+          console.log('Using partner API keys');
         } else if (this.accessToken) {
-          // Fallback to OAuth if API key not available
+          // Fallback to OAuth only if no partner keys available
           config.headers.Authorization = `Bearer ${this.accessToken}`;
           console.log('Using OAuth Bearer token (fallback)');
         }
@@ -123,15 +104,27 @@ class RunSignUpApiService {
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
+        const originalRequest = error.config;
+
         if (error.response?.data?.error) {
           const apiError = error.response.data.error;
-          
+
           // Handle token expiration (error code 6)
-          if (apiError.error_code === 6) {
-            console.log('Token expired, attempting refresh...');
-            await this.refreshAccessToken();
-            // Retry the original request
-            return this.client.request(error.config);
+          if (apiError.error_code === 6 && !originalRequest._retry) {
+            console.log('Authentication failed (Error 6), attempting token refresh...');
+            originalRequest._retry = true;
+
+            try {
+              await this.refreshAccessToken();
+              console.log('Token refreshed successfully, retrying request...');
+              // Retry the original request with new token
+              return this.client.request(originalRequest);
+            } catch (refreshError) {
+              console.error('Token refresh failed:', refreshError);
+              // Clear tokens and reject with more helpful error
+              await this.clearTokens();
+              return Promise.reject(new Error('Authentication expired. Please sign in again to continue.'));
+            }
           }
         }
         return Promise.reject(error);
@@ -204,17 +197,24 @@ class RunSignUpApiService {
   private async refreshAccessToken(): Promise<void> {
     const refreshToken = await this.getRefreshToken();
     if (!refreshToken) {
+      console.warn('No refresh token available - user needs to re-authenticate');
       throw new Error('No refresh token available');
     }
 
     try {
-      // Note: Implement OAuth2 token refresh endpoint
-      // This is a placeholder - actual implementation in OAuth2Service
-      console.log('Token refresh needed - implement in OAuth2Service');
+      console.log('Attempting to refresh access token...');
+
+      // Import oauth2Service dynamically to avoid circular dependency
+      const { oauth2Service } = await import('./auth.service');
+      const tokenResponse = await oauth2Service.refreshToken();
+
+      console.log('Token refreshed successfully');
+      this.accessToken = tokenResponse.access_token;
     } catch (error) {
       console.error('Failed to refresh token:', error);
+      // Clear invalid tokens
       await this.clearTokens();
-      throw error;
+      throw new Error('Authentication expired. Please sign in again.');
     }
   }
 

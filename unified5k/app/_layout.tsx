@@ -1,16 +1,22 @@
+/**
+ * ROOT LAYOUT - Main app navigation with tab bar
+ * Sets up Clerk authentication and tab navigation
+ * Handles routing between authenticated and public pages
+ */
+
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Tabs, useRouter, useSegments, usePathname } from "expo-router";
-import { PaperProvider } from "react-native-paper";
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { PaperProvider } from "react-native-paper"; // Material Design components
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo"; // User auth
 import { useEffect, useRef } from "react";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "expo-secure-store"; // Secure token storage
 import "./global.css";
 
-// --- Token cache setup  ---
+// Securely cache auth tokens on device
 const tokenCache = {
   async getToken(key: string) {
     try {
-      return await SecureStore.getItemAsync(key);
+      return await SecureStore.getItemAsync(key); // Retrieve from secure storage
     } catch (error) {
       console.error("Error getting token:", error);
       return null;
@@ -18,74 +24,76 @@ const tokenCache = {
   },
   async saveToken(key: string, value: string) {
     try {
-      await SecureStore.setItemAsync(key, value);
+      await SecureStore.setItemAsync(key, value); // Save to secure storage
     } catch (error) {
       console.error("Error saving token:", error);
     }
   },
 };
 
-// --- Auth-aware layout navigation ---
+// Main navigation with auth protection
 function RootLayoutNav() {
-  const { isSignedIn, isLoaded } = useAuth();
-  const segments = useSegments();
+  const { isSignedIn, isLoaded } = useAuth(); // Check auth status
+  const segments = useSegments(); // Current route segments
   const router = useRouter();
-  const pathname = usePathname();
-  const hasNavigated = useRef(false);
+  const pathname = usePathname(); // Current page path
+  const hasNavigated = useRef(false); // Prevent multiple redirects
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded) return; // Wait for auth to load
 
-    const inAuthGroup = segments[0] === "(auth)";
+    const inAuthGroup = segments[0] === "(auth)"; // Check if on login/signup
 
-    // Redirect signed-in users away from auth pages
+    // Redirect logged-in users away from login pages
     if (isSignedIn && inAuthGroup && !hasNavigated.current) {
       hasNavigated.current = true;
-      router.replace("/");
+      router.replace("/"); // Go to home
     }
 
-    // Redirect signed-out users away from protected routes
+    // Redirect logged-out users to login
     if (!isSignedIn && !inAuthGroup && !hasNavigated.current) {
       hasNavigated.current = true;
-      router.replace("/(auth)/sign-in");
+      router.replace("/(auth)/sign-in"); // Go to login
     }
   }, [isSignedIn, isLoaded, segments]);
 
   if (!isLoaded) {
-    return null; // could replace with a splash screen later
+    return null; // Show nothing while loading
   }
 
   return (
     <Tabs
       screenOptions={({ route }) => {
-        // Check if we're on race_details page to highlight Home tab
+        // Highlight Home tab when viewing race details
         const isOnRaceDetails = pathname?.includes('race_details');
 
         return {
-          tabBarActiveTintColor: "#009EE2",
-          tabBarInactiveTintColor: "gray",
+          tabBarActiveTintColor: "#009EE2", // Active tab color
+          tabBarInactiveTintColor: "gray", // Inactive tab color
           tabBarStyle: {
             backgroundColor: "#fff",
             borderTopColor: "#eee",
-            height: 70,
+            height: 70, // Tab bar height
           },
           tabBarLabelStyle: {
             fontSize: 12,
             marginBottom: 4,
+            // Keep Home highlighted when on race details
             color: (route.name === "index" && isOnRaceDetails) ? "#009EE2" : undefined,
           },
           tabBarIcon: ({ color, size, focused }) => {
-            // Override color for Home icon when on race_details
+            // Override Home icon color for race details
             const iconColor = (route.name === "index" && isOnRaceDetails)
               ? "#009EE2"
               : color;
 
+            // Render appropriate icon for each tab
             switch (route.name) {
               case "media":
                 return <FontAwesome5 name="globe" size={size} color={color} />;
               case "resources":
                 return <MaterialIcons name="folder" size={size} color={color} />;
-              case "index":
+              case "index": // Home tab
                 return <Ionicons name="home-outline" size={size} color={iconColor} />;
               case "donation":
                 return <Ionicons name="heart-outline" size={size} color={color} />;
@@ -95,18 +103,18 @@ function RootLayoutNav() {
                 return null;
             }
           },
-          headerShown: false,
+          headerShown: false, // Hide default header
         };
       }}
     >
-      {/* Main tabs */}
+      {/* Main visible tabs */}
       <Tabs.Screen name="media" options={{ title: "Media" }} />
       <Tabs.Screen name="resources" options={{ title: "Resources" }} />
       <Tabs.Screen name="index" options={{ title: "Home" }} />
       <Tabs.Screen name="donation" options={{ title: "Donation" }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
 
-      {/* Hidden routes */}
+      {/* Hidden routes - accessible but not in tab bar */}
       <Tabs.Screen name="race_details" options={{ href: null }} />
       <Tabs.Screen name="sponsor-tiers" options={{ href: null }} />
       <Tabs.Screen name="(auth)" options={{ href: null }} />
@@ -114,17 +122,17 @@ function RootLayoutNav() {
   );
 }
 
-// --- Root provider setup ---
+// App root with auth and UI providers
 export default function RootLayout() {
   const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
   if (!publishableKey) {
-    throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY");
+    throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY"); // Env check
   }
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <PaperProvider>
+      <PaperProvider> {/* Material Design wrapper */}
         <RootLayoutNav />
       </PaperProvider>
     </ClerkProvider>

@@ -1,36 +1,44 @@
+/**
+ * HOME SCREEN - Main race browsing page
+ * Displays searchable/filterable list of races from RunSignUp
+ * Fetches real data using partner API keys
+ * Includes hero section, search, filters, and race cards
+ */
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import FilterTabs from '../components/FilterTabs';
-import Header from '../components/Header';
-import HeroSection from '../components/HeroSection';
-import RaceCard from '../components/RaceCard';
-import SearchBar from '../components/SearchBar';
-import { raceService, type Race } from '../services/runsignup';
+import FilterTabs from '../components/FilterTabs'; // Live/Past/Upcoming filters
+import Header from '../components/Header'; // App header with logo
+import HeroSection from '../components/HeroSection'; // Top featured section
+import RaceCard from '../components/RaceCard'; // Individual race display
+import SearchBar from '../components/SearchBar'; // Race search input
+import { raceService, type Race } from '../services/runsignup'; // API service
 
+// Filter state for race display
 interface ActiveFilters {
-  live: boolean;
-  past: boolean;
-  upcoming: boolean;
+  live: boolean; // Show races happening now
+  past: boolean; // Show completed races
+  upcoming: boolean; // Show future races
 }
 
 const IndexScreen: React.FC = () => {
   const navigation = useNavigation();
-  const router = useRouter();
+  const router = useRouter(); // Navigation
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>(''); // User search input
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     live: true,
     past: true,
-    upcoming: true,
+    upcoming: true, // All filters active by default
   });
 
-  const [races, setRaces] = useState<Race[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notificationStates, setNotificationStates] = useState<{[key: number]: boolean}>({});
+  const [races, setRaces] = useState<Race[]>([]); // Fetched races
+  const [loading, setLoading] = useState<boolean>(true); // API loading state
+  const [error, setError] = useState<string | null>(null); // Error message
+  const [notificationStates, setNotificationStates] = useState<{[key: number]: boolean}>({}); // Bell icon states
 
   /**
    * Fetch races based on active filters

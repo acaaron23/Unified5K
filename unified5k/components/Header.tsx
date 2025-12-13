@@ -1,3 +1,8 @@
+/**
+ * Header Component - App logo header
+ * Displays Unified5K logo at top of screens
+ */
+
 import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 

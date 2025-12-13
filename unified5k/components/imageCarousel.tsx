@@ -1,38 +1,37 @@
 /**
+ * IMAGE CAROUSEL - Photo slideshow with navigation
+ * Displays race photos in a swipeable carousel
+ * Includes previous/next buttons and position indicator
+ * Used on race details page to show event photos
+ *
  * Josh Ilano
  * Boston University
  * 7-16-2025
  */
 
-
 import { Pressable, Text, View } from "react-native";
-import { Image } from 'expo-image';
+import { Image } from 'expo-image'; // Optimized image component
 import { useState, useEffect } from 'react';
 
 /**
- * 
- * @param imageResponse 
- * Example:  
+ * Displays a carousel of images with navigation controls
+ * @param imageResponse - Array of image URLs to display
+ * Example:
  *  const imageUrls = [
     'https://picsum.photos/id/1011/500/300',
     'https://picsum.photos/id/1025/500/300',
     'https://picsum.photos/id/1035/500/300',
-    'https://picsum.photos/id/1043/500/300',
-    'https://picsum.photos/id/1062/500/300',
-    'https://picsum.photos/id/1074/500/300',
   ];
- * 
- * 
- * @returns ImageCarousel UI Element
+ * @returns ImageCarousel UI Element with prev/next buttons
  */
 export default function ImageCarousel({imageResponse}: {imageResponse: string[]}) {
 
-    const [index, setIndex] = useState(0); // on change of index, a different image will appear
+    const [index, setIndex] = useState(0); // Current image index - changes which photo is displayed
 
 
     return (
         <View
-            style={{ // the UI is currently only intended for vertical phones, change as needed in future
+            style={{ // Carousel container - optimized for vertical phone layout
                 position: 'relative',
                 height: 280,
                 width: '100%',
@@ -44,12 +43,14 @@ export default function ImageCarousel({imageResponse}: {imageResponse: string[]}
             }}
         >
 
-            <Image // content image
+            {/* Display current photo */}
+            <Image
                 source={imageResponse[index]}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
             />
 
+            {/* Navigation controls at bottom of carousel */}
             <View style={{
                 flexDirection: 'row',
                 gap: 10,
@@ -57,7 +58,8 @@ export default function ImageCarousel({imageResponse}: {imageResponse: string[]}
                 bottom: 16,
                 alignItems: 'center',
             }}>
-                <Pressable // Left button to return to previous image
+                {/* Previous button - wraps to last image if at start */}
+                <Pressable
                     onPress={() => setIndex(((index - 1) + imageResponse.length) % imageResponse.length)}
                     style={{
                         borderRadius: 25,
@@ -71,7 +73,8 @@ export default function ImageCarousel({imageResponse}: {imageResponse: string[]}
                     <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>{"<"}</Text>
                 </Pressable>
 
-                <View style={{ // button to display status of selection
+                {/* Position indicator showing current/total images */}
+                <View style={{
                     paddingHorizontal: 20,
                     paddingVertical: 8,
                     borderRadius: 20,
@@ -82,8 +85,8 @@ export default function ImageCarousel({imageResponse}: {imageResponse: string[]}
                     </Text>
                 </View>
 
-
-                <Pressable // Right button to progress to next image
+                {/* Next button - wraps to first image if at end */}
+                <Pressable
                     onPress={() => setIndex((index + 1) % imageResponse.length)}
                     style={{
                         borderRadius: 25,
@@ -96,9 +99,6 @@ export default function ImageCarousel({imageResponse}: {imageResponse: string[]}
                 >
                     <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#333' }}>{">"}</Text>
                 </Pressable>
-
-
-
             </View>
         </View>
     );
