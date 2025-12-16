@@ -26,9 +26,9 @@ Unified5K is a **React Native + Expo** application for event discovery, race inf
 
 ### Tech Stack
 - **Frontend**: React Native + Expo, NativeWind (Tailwind v3)  
-- **Backend**: Firebase  
-- **Database**: Firebase Firestore  
-- **Deployment**: TBD  
+- **Backend**: Firebase 
+- **Database**: Firebase Firestore + PostgreSQL with Prisma ORM
+- **Deployment**: App Store Deployment
 - **Other Tools**: [Figma](https://www.figma.com/design/sMEvDVTnccQDVJz52j8yCF/Unified5k-Wireframes?node-id=104-833&p=f&t=VqN2u39CbGvyDc3l-0) (design), [GitHub](https://github.com/alexiak0127/Unified5K) (version control)  
 
 ---
@@ -97,6 +97,11 @@ Start the development server:
 npx expo start
 ```
 
+After starting developent server: 
+```
+press i
+```
+
 Or alternatives:
 ```
 npx expo start --dev-client --clear
@@ -108,75 +113,68 @@ npx expo start --dev-client --clear
 
 ```bash
 unified5k/
-├── app/                     # Screens & routes (Expo Router)
-│   ├── index.tsx            # Home page
-│   ├── donation.tsx         # Donation page
-│   ├── sponsor-tiers.tsx    # Sponsorship tiers page
-│   ├── profile.tsx          # User profile page
-│   ├── media.tsx            # Media page
-│   ├── race_details.tsx     # Race details page
-│   ├── resources.tsx        # Resources page
-│   ├── register.tsx         # Registration page
-│   ├── login.tsx            # Login page
-│   ├── _layout.tsx
-│   └── …                    # Add more
+├── app/                          # Main application screens (file-based routing)
+│   ├── (auth)/                   # Authentication routes
+│   │   ├── sign-in.tsx          # Sign in screen
+│   │   ├── sign-up.tsx          # Sign up screen
+│   │   └── _layout.tsx          # Auth layout wrapper
+│   ├── _layout.tsx              # Root layout
+│   ├── index.tsx                # Home screen
+│   ├── donation.tsx             # Donation page
+│   ├── media.tsx                # Media gallery page
+│   ├── profile.tsx              # User profile page
+│   ├── race_details.tsx         # Race details page
+│   ├── resources.tsx            # Resources page
+│   └── sponsor-tiers.tsx        # Sponsor tiers page
 │
-├── components/              # Reusable UI components
-│   ├── profile/ 
-│   │   ├── CollapsibleSection.tsx #Collapsible Section in profile page 
-│   ├── Header.tsx           # App header with logo
-│   ├── RaceCard.tsx         # Race card component
-│   ├── SponsorModal.tsx     # Modal for sponsor/vendor inquiries
-│   ├── SearchBar.tsx        # Search Bar in the landing page
-│   ├── ArticleCard.tsx      # Article cards
-│   ├── HeroSection.tsx      # Top banner for the home page to find races
-│   ├── BlogPostCard.tsx     # For blog post page (scrollable list of cards)
-│   ├── FilterTabs.tsx       # Filter options
-│   ├── Descriptor.tsx       # Race details (time, location, and address)
-│   ├── ImageCarousel.tsx    # Images of the race
-│   └── ...                      # Add more
+├── components/                   # Reusable UI components
+│   ├── profile/
+│   │   └── CollapsibleSection.tsx
+│   ├── ArticleCard.tsx
+│   ├── BlogPostCard.tsx
+│   ├── descriptor.tsx
+│   ├── donationBar.tsx
+│   ├── FilterTabs.tsx
+│   ├── Header.tsx
+│   ├── HeroSection.tsx
+│   ├── imageCarousel.tsx
+│   ├── RaceCard.tsx
+│   ├── SearchBar.tsx
+│   ├── SignOutButton.tsx
+│   └── SponsorModal.tsx
 │
-├── assets/                  # Static assets (images, icons, fonts)
-│   ├── fonts/
-│   │   ├── Poppins-Medium.ttf
-│   │   ├── Poppins-Regular.ttf
-│   │   ├── Poppins-SemiBold.ttf
-│   │   ├── SpaceMono-Regular.ttf
-│   ├── images/
-│   │   ├── raceimage1.jpg
-│   │   ├── raceimage2.jpg
-│   │   ├── raceimage3.jpg
-│   │   ├── raceimage4.jpg
-│   │   ├── corporate-sponsor-option-image.jpg
-│   │   ├── adaptive-icon.png
-│   │   ├── icon.png
-│   │   ├── splash-icon.png
-│   │   ├── unified-5k-logo.png
-│   │   ├── logo.png
-│   │   ├── partial-react-logo.png
-│   │   ├── react-logo.png
-│   │   ├── react-logo@2x.png
-│   │   ├── react-logo@3x.png
-│   │   ├── favicon.png
-│   │   └── profile-placeholder.jpg
+├── services/                     # API and service layer
+│   └── runsignup/               # RunSignUp API integration
+│       ├── api.service.ts       # Base API service
+│       ├── auth.service.ts      # Authentication service
+│       ├── photo.service.ts     # Photo management service
+│       ├── race.service.ts      # Race data service
+│       ├── registration.service.ts  # Registration service
+│       ├── user.service.ts      # User management service
+│       └── index.ts             # Service exports
 │
-├── package.json             # Project dependencies & scripts
-├── app.json                 # Expo project config
-├── babel.config.js          # Babel setup for NativeWind / Expo
-├── tailwind.config.js       # TailwindCSS (NativeWind) styles
-├── tsconfig.json            # TypeScript configuration
-├── GoogleService-Info.plist # Firebase API key for iOS
-├── google-services.json     # Firebase API key for Android
-├── eas.json                 # Expo cloud development setup
-├── metro.config.js          # NativeWind config
-├── nativewind-env.d.ts      # NativeWind env variables
-└── README.md                # Project documentation
+├── hooks/                        # Custom React hooks
+│   └── useRunSignUp.ts          # RunSignUp integration hook
+│
+├── utils/                        # Utility functions
+│   └── testApi.ts               # API testing utilities
+│
+├── assets/                       # Static assets (images, fonts)
+│
+├── ios/                          # iOS native project files
+│
+├── .env                          # Environment variables
+├── app.json                      # Expo app configuration
+├── tailwind.config.js           # Tailwind CSS configuration
+├── tsconfig.json                # TypeScript configuration
+└── package.json                 # Project dependencies
 ```
 
 ## Future Work 
-- **Authentication Improvements**: Refine sign-in and sign-up flows, including proper redirect after login/registration. Enhance registration to sync Authentication users with a Firestore Users collection for persistent profile data. 
-- **Database Integration**: Connect Firestore to fetch and display user-specific and race-related data throughout the app.  
+- **Authentication Improvements**: Refine sign-in and sign-up flows, including proper redirect after login/registration. Enhance registration to sync with RunSignUp for races and any other details from the API. 
+- **Database Integration**: Connect Firebase + PostgreSQL logic to make sure that data is stored properly.  
 - **Frontend Refinements**: Polish UI/UX for smoother navigation, responsive styling, and accessibility improvements.  
 - **Deployment**: Prepare and configure production builds for both iOS and Android via Expo EAS.
-- **RunSignUp API Integration**: Complete the connection between the frontend and RunSignUp API. Replace the temporary affiliate key with OAuth-based authentication and extend functionality to fetch event-level data (e.g., donation amounts, race times) for more detailed Race Details pages. 
+- **RunSignUp API Integration**: Complete the connection between the frontend and RunSignUp API. Continue to implement the API key with race signup/volunteering. Also, adding information to the Media and Resource tab. 
+- **App UI/UX**: Continue to add any changes necessary to make sure that the application is simple and easy to use for all users. 
 
